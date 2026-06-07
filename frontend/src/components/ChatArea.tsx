@@ -92,17 +92,18 @@ export function ChatArea({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-muted/30">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4 bg-[#efeae2] dark:bg-[#0b141a]">
+      <div className="max-w-4xl mx-auto flex flex-col gap-2">
         {nodes.map((node) => (
-          <Card key={node.id} className="p-5 shadow-sm hover:shadow-md transition-shadow border-border bg-card relative group">
+          <div key={node.id} className="flex w-full justify-start relative group">
             
-            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+            {/* Action Menu (Visible on Hover) */}
+            <div className="absolute -top-3 -right-2 md:right-auto md:left-[calc(100%+0.5rem)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
               <DropdownMenu>
-                <DropdownMenuTrigger className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                <DropdownMenuTrigger className="h-8 w-8 bg-background border border-border shadow-sm rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none">
                   <MoreHorizontal className="w-4 h-4" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="start">
                   <DropdownMenuItem 
                     onClick={() => {
                       setEditingNodeId(node.id);
@@ -128,48 +129,59 @@ export function ChatArea({
                     <Trash2 className="w-4 h-4 mr-2" />
                     Delete
                   </DropdownMenuItem>
+                  <Link href={`/w/${workspaceId}/n/${node.id}`} className="w-full">
+                    <DropdownMenuItem className="cursor-pointer">
+                      <MessageSquareShare className="w-4 h-4 mr-2" />
+                      Open Thread
+                    </DropdownMenuItem>
+                  </Link>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
 
-            {editingNodeId === node.id ? (
-              <div className="mb-4 pr-8">
-                <Textarea 
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  className="min-h-[100px] mb-2"
-                  autoFocus
-                />
-                <div className="flex gap-2 justify-end">
-                  <Button variant="outline" size="sm" onClick={() => setEditingNodeId(null)}>
-                    <X className="w-4 h-4 mr-1" /> Cancel
-                  </Button>
-                  <Button size="sm" onClick={() => handleEditSave(node.id)} disabled={isSaving}>
-                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Check className="w-4 h-4 mr-1" />} Save
-                  </Button>
-                </div>
+            {/* Chat Bubble */}
+            <div className="relative max-w-[90%] md:max-w-[75%] bg-white dark:bg-[#202c33] rounded-2xl rounded-tl-sm shadow-sm p-2 pl-3">
+              
+              {/* Sender Name */}
+              <div className="text-[13px] font-medium text-[#027eb5] dark:text-[#53bdeb] mb-1">
+                Past Me
               </div>
-            ) : (
-              <div className="whitespace-pre-wrap text-card-foreground leading-relaxed mb-4 pr-8">
-                {node.content}
-              </div>
-            )}
 
-            <div className="flex justify-between items-center text-xs text-muted-foreground border-t pt-3">
-              <div className="flex items-center gap-2">
-                <span>{new Date(node.created_at).toLocaleString()}</span>
+              {editingNodeId === node.id ? (
+                <div className="mb-4 pr-12 min-w-[200px]">
+                  <Textarea 
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    className="min-h-[80px] mb-2 bg-transparent border-primary/20"
+                    autoFocus
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="outline" size="sm" onClick={() => setEditingNodeId(null)} className="h-7 text-xs">
+                      <X className="w-3 h-3 mr-1" /> Cancel
+                    </Button>
+                    <Button size="sm" onClick={() => handleEditSave(node.id)} disabled={isSaving} className="h-7 text-xs">
+                      {isSaving ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Check className="w-3 h-3 mr-1" />} Save
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-[15px] text-[#111b21] dark:text-[#e9edef] leading-relaxed whitespace-pre-wrap pr-16 pb-3">
+                  {node.content}
+                </div>
+              )}
+
+              {/* Timestamp */}
+              <div className="absolute bottom-1 right-2 flex items-center gap-1 text-[11px] text-[#667781] dark:text-[#8696a0]">
                 {node.updated_at && (
-                  <span className="italic opacity-70">(edited)</span>
+                  <span className="italic mr-1">(edited)</span>
                 )}
+                <span>
+                  {new Date(node.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
               </div>
-              <Link href={`/w/${workspaceId}/n/${node.id}`}>
-                <Button variant="ghost" size="sm" className="h-8 text-primary hover:bg-primary/10">
-                  <MessageSquareShare className="w-4 h-4 mr-2" />
-                  Open Thread
-                </Button>
-              </Link>
+
             </div>
-          </Card>
+          </div>
         ))}
         <div ref={bottomRef} />
       </div>

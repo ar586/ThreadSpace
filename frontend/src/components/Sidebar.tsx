@@ -5,10 +5,11 @@ import { fetcher } from "@/lib/api";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { useState } from "react";
-import { FolderPlus, Hash, Loader2, Trash2 } from "lucide-react";
+import { FolderPlus, Hash, Loader2, Trash2, LogOut, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ThemeToggle } from "./ThemeToggle";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface Workspace {
   id: string;
@@ -22,6 +23,7 @@ export function Sidebar() {
   const [isCreating, setIsCreating] = useState(false);
   const params = useParams();
   const router = useRouter();
+  const { user, logout } = useAuth();
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,7 +95,7 @@ export function Sidebar() {
         ))}
       </div>
 
-      <div className="p-4 border-t border-border bg-background">
+      <div className="p-4 border-t border-border bg-background space-y-4">
         <form onSubmit={handleCreate} className="flex gap-2">
           <Input
             value={newWorkspaceName}
@@ -105,6 +107,22 @@ export function Sidebar() {
             {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <FolderPlus className="w-4 h-4" />}
           </Button>
         </form>
+
+        {user && (
+          <div className="flex items-center justify-between pt-4 border-t border-border">
+            <div className="flex items-center gap-2 overflow-hidden">
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                <UserIcon className="w-4 h-4 text-primary" />
+              </div>
+              <span className="text-sm font-medium truncate text-foreground">
+                {user.email.split("@")[0]}
+              </span>
+            </div>
+            <Button variant="ghost" size="icon" onClick={logout} className="shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

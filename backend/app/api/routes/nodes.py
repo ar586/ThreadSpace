@@ -7,12 +7,35 @@ from uuid import UUID
 
 from app.database import get_db
 from app.models.node import Node
+from app.models.workspace import Workspace
+from app.models.user import User
 from app.schemas import NodeCreate, NodeResponse, BreadcrumbNode, NodeUpdate
+from app.api.dependencies import get_current_user
 
 router = APIRouter()
 
+async def verify_workspace_owner(workspace_id: UUID, user_id: UUID, db: AsyncSession):
+    result = await db.execute(select(Workspace).where(Workspace.id == workspace_id, Workspace.user_id == user_id))
+    if not result.scalar_one_or_none():
+        raise HTTPException(status_code=403, detail="Not authorized to access this workspace")
+
+async def verify_node_owner(node_id: UUID, user_id: UUID, db: AsyncSession) -> Node:
+    result = await db.execute(
+        select(Node).join(Workspace).where(Node.id == node_id, Workspace.user_id == user_id)
+    )
+    node = result.scalar_one_or_none()
+    if not node:
+        raise HTTPException(status_code=404, detail="Node not found or not authorized")
+    return node
+
 @router.post("/", response_model=NodeResponse)
-async def create_node(node: NodeCreate, db: AsyncSession = Depends(get_db)):
+async def create_node(
+    node: NodeCreate, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    await verify_workspace_owner(node.workspace_id, current_user.id, db)
+    
     new_node = Node(
         content=node.content,
         parent_id=node.parent_id,
@@ -24,17 +47,32 @@ async def create_node(node: NodeCreate, db: AsyncSession = Depends(get_db)):
     return new_node
 
 @router.get("/{node_id}/children", response_model=List[NodeResponse])
-async def get_children(node_id: UUID, db: AsyncSession = Depends(get_db)):
+async def get_children(
+    node_id: UUID, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    await verify_node_owner(node_id, current_user.id, db)
     result = await db.execute(select(Node).where(Node.parent_id == node_id).order_by(Node.created_at.asc()))
     return result.scalars().all()
 
 @router.get("/workspace/{workspace_id}/root", response_model=List[NodeResponse])
-async def get_root_nodes(workspace_id: UUID, db: AsyncSession = Depends(get_db)):
+async def get_root_nodes(
+    workspace_id: UUID, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    await verify_workspace_owner(workspace_id, current_user.id, db)
     result = await db.execute(select(Node).where(Node.workspace_id == workspace_id, Node.parent_id == None).order_by(Node.created_at.asc()))
     return result.scalars().all()
 
 @router.get("/{node_id}/breadcrumbs", response_model=List[BreadcrumbNode])
-async def get_breadcrumbs(node_id: UUID, db: AsyncSession = Depends(get_db)):
+async def get_breadcrumbs(
+    node_id: UUID, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    await verify_node_owner(node_id, current_user.id, db)
     query = text("""
         WITH RECURSIVE breadcrumbs AS (
             SELECT id, content, parent_id, 0 as level
@@ -56,20 +94,24 @@ async def get_breadcrumbs(node_id: UUID, db: AsyncSession = Depends(get_db)):
     return rows
 
 @router.delete("/{node_id}")
-async def delete_node(node_id: UUID, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Node).where(Node.id == node_id))
-    node = result.scalar_one_or_none()
-    if node:
-        await db.delete(node)
-        await db.commit()
+async def delete_node(
+    node_id: UUID, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    node = await verify_node_owner(node_id, current_user.id, db)
+    await db.delete(node)
+    await db.commit()
     return {"status": "success"}
 
 @router.put("/{node_id}", response_model=NodeResponse)
-async def update_node(node_id: UUID, node_update: NodeUpdate, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Node).where(Node.id == node_id))
-    node = result.scalar_one_or_none()
-    if not node:
-        raise HTTPException(status_code=404, detail="Node not found")
+async def update_node(
+    node_id: UUID, 
+    node_update: NodeUpdate, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    node = await verify_node_owner(node_id, current_user.id, db)
     
     node.content = node_update.content
     node.updated_at = func.now()

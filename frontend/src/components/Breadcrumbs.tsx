@@ -19,17 +19,17 @@ export function Breadcrumbs({ workspaceId, nodeId }: { workspaceId: string; node
   );
 
   return (
-    <div className="flex items-center gap-2 p-4 bg-white border-b sticky top-0 z-10 text-sm overflow-x-auto whitespace-nowrap">
+    <div className="flex items-center gap-2 p-4 bg-background border-b border-border sticky top-0 z-10 text-sm overflow-x-auto whitespace-nowrap">
       <Link
         href={`/w/${workspaceId}`}
-        className="flex items-center gap-1 text-slate-500 hover:text-indigo-600 transition-colors"
+        className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
       >
         <Home className="w-4 h-4" />
         <span>Root</span>
       </Link>
 
       {!breadcrumbs && !error && nodeId && (
-        <Loader2 className="w-4 h-4 animate-spin text-slate-400 ml-2" />
+        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground ml-2" />
       )}
 
       {breadcrumbs?.map((crumb, index) => {
@@ -40,11 +40,11 @@ export function Breadcrumbs({ workspaceId, nodeId }: { workspaceId: string; node
         
         return (
           <div key={crumb.id} className="flex items-center gap-2">
-            <ChevronRight className="w-4 h-4 text-slate-300" />
+            <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
             <Link
               href={`/w/${workspaceId}/n/${crumb.id}`}
               className={`${
-                isLast ? "text-slate-900 font-medium" : "text-slate-500 hover:text-indigo-600"
+                isLast ? "text-foreground font-medium" : "text-muted-foreground hover:text-primary"
               } transition-colors`}
             >
               {truncated}

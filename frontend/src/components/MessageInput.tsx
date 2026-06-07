@@ -42,7 +42,7 @@ export function MessageInput({
   };
 
   return (
-    <div className="p-4 bg-white border-t sticky bottom-0">
+    <div className="p-4 bg-background border-t border-border sticky bottom-0">
       <form onSubmit={handleSubmit} className="flex gap-3 max-w-4xl mx-auto">
         <Textarea
           value={content}
@@ -59,7 +59,7 @@ export function MessageInput({
         <Button 
           type="submit" 
           disabled={isSending || !content.trim()}
-          className="h-auto px-6 bg-indigo-600 hover:bg-indigo-700"
+          className="h-auto px-6 bg-primary hover:bg-primary/90 text-primary-foreground"
         >
           <SendHorizontal className="w-5 h-5" />
         </Button>

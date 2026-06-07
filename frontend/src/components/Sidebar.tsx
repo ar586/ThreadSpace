@@ -8,6 +8,7 @@ import { useState } from "react";
 import { FolderPlus, Hash, Loader2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { ThemeToggle } from "./ThemeToggle";
 
 export interface Workspace {
   id: string;
@@ -43,15 +44,16 @@ export function Sidebar() {
   };
 
   return (
-    <div className="w-64 bg-slate-50 border-r h-screen flex flex-col">
-      <div className="p-4 border-b">
-        <h2 className="font-bold text-xl flex items-center gap-2">
-          <Hash className="w-5 h-5 text-indigo-600" /> ThreadSpace
+    <div className="w-64 bg-muted/30 border-r border-border h-screen flex flex-col">
+      <div className="p-4 border-b border-border flex justify-between items-center">
+        <h2 className="font-bold text-xl flex items-center gap-2 text-foreground">
+          <Hash className="w-5 h-5 text-primary" /> ThreadSpace
         </h2>
+        <ThemeToggle />
       </div>
       
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
-        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Workspaces</h3>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Workspaces</h3>
         {!workspaces && !error && (
           <div className="flex justify-center p-4">
             <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
@@ -60,8 +62,8 @@ export function Sidebar() {
         {workspaces?.map((ws) => (
           <div key={ws.id} className={`group flex items-center justify-between rounded-md transition-colors ${
               params.workspaceId === ws.id
-                ? "bg-indigo-100 text-indigo-700 font-medium"
-                : "text-slate-700 hover:bg-slate-100"
+                ? "bg-primary/10 text-primary font-medium"
+                : "text-foreground hover:bg-accent hover:text-accent-foreground"
             }`}>
             <Link
               href={`/w/${ws.id}`}
@@ -91,7 +93,7 @@ export function Sidebar() {
         ))}
       </div>
 
-      <div className="p-4 border-t bg-white">
+      <div className="p-4 border-t border-border bg-background">
         <form onSubmit={handleCreate} className="flex gap-2">
           <Input
             value={newWorkspaceName}

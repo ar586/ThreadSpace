@@ -78,28 +78,28 @@ export function ChatArea({
   if (!nodes) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-300" />
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   if (nodes.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center text-slate-400">
+      <div className="flex-1 flex items-center justify-center text-muted-foreground">
         <p>No messages yet. Be the first to start the thread!</p>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-slate-50">
+    <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-muted/30">
       <div className="max-w-4xl mx-auto space-y-6">
         {nodes.map((node) => (
-          <Card key={node.id} className="p-5 shadow-sm hover:shadow-md transition-shadow border-slate-200 relative group">
+          <Card key={node.id} className="p-5 shadow-sm hover:shadow-md transition-shadow border-border bg-card relative group">
             
             <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
               <DropdownMenu>
-                <DropdownMenuTrigger className="h-8 w-8 inline-flex items-center justify-center rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-300">
+                <DropdownMenuTrigger className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
                   <MoreHorizontal className="w-4 h-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -150,12 +150,12 @@ export function ChatArea({
                 </div>
               </div>
             ) : (
-              <div className="whitespace-pre-wrap text-slate-800 leading-relaxed mb-4 pr-8">
+              <div className="whitespace-pre-wrap text-card-foreground leading-relaxed mb-4 pr-8">
                 {node.content}
               </div>
             )}
 
-            <div className="flex justify-between items-center text-xs text-slate-400 border-t pt-3">
+            <div className="flex justify-between items-center text-xs text-muted-foreground border-t pt-3">
               <div className="flex items-center gap-2">
                 <span>{new Date(node.created_at).toLocaleString()}</span>
                 {node.updated_at && (
@@ -163,7 +163,7 @@ export function ChatArea({
                 )}
               </div>
               <Link href={`/w/${workspaceId}/n/${node.id}`}>
-                <Button variant="ghost" size="sm" className="h-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
+                <Button variant="ghost" size="sm" className="h-8 text-primary hover:bg-primary/10">
                   <MessageSquareShare className="w-4 h-4 mr-2" />
                   Open Thread
                 </Button>

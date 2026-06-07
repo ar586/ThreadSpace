@@ -1,0 +1,26 @@
+# OS Files
+.DS_Store
+*.swp
+
+# Node / Next.js (frontend)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.env*.local
+
+# Python / FastAPI (backend)
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+backend/venv/
+backend/.env
+backend/.pytest_cache/
+backend/alembic.ini
+
+# IDEs
+.vscode/
+.idea/
+
+# Docker
+.dockerignore

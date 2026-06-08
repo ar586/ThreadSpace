@@ -90,7 +90,7 @@ export function ChatArea({
 
   if (!nodes) {
     return (
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center bg-[#efeae2] dark:bg-[#0b141a]">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -98,7 +98,7 @@ export function ChatArea({
 
   if (nodes.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center text-muted-foreground">
+      <div className="flex-1 flex items-center justify-center text-muted-foreground bg-[#efeae2] dark:bg-[#0b141a]">
         <p>No messages yet. Be the first to start the thread!</p>
       </div>
     );

@@ -288,7 +288,7 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
 
   if (!rawNodes) {
     return (
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center bg-muted/10">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
     );

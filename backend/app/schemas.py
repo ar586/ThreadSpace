@@ -34,12 +34,18 @@ class NodeCreate(BaseModel):
 class NodeUpdate(BaseModel):
     content: str
 
+class NodePositionUpdate(BaseModel):
+    position_x: float
+    position_y: float
+
 class NodeResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID
     content: str
     parent_id: Optional[UUID]
     workspace_id: UUID
+    position_x: float
+    position_y: float
     created_at: datetime
     updated_at: Optional[datetime] = None
 

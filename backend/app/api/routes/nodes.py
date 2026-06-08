@@ -9,7 +9,7 @@ from app.database import get_db
 from app.models.node import Node
 from app.models.workspace import Workspace
 from app.models.user import User
-from app.schemas import NodeCreate, NodeResponse, BreadcrumbNode, NodeUpdate
+from app.schemas import NodeCreate, NodeResponse, BreadcrumbNode, NodeUpdate, NodePositionUpdate
 from app.api.dependencies import get_current_user
 
 router = APIRouter()
@@ -66,6 +66,16 @@ async def get_root_nodes(
     result = await db.execute(select(Node).where(Node.workspace_id == workspace_id, Node.parent_id == None).order_by(Node.created_at.asc()))
     return result.scalars().all()
 
+@router.get("/workspace/{workspace_id}/all", response_model=List[NodeResponse])
+async def get_all_workspace_nodes(
+    workspace_id: UUID, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    await verify_workspace_owner(workspace_id, current_user.id, db)
+    result = await db.execute(select(Node).where(Node.workspace_id == workspace_id).order_by(Node.created_at.asc()))
+    return result.scalars().all()
+
 @router.get("/{node_id}/breadcrumbs", response_model=List[BreadcrumbNode])
 async def get_breadcrumbs(
     node_id: UUID, 
@@ -115,6 +125,21 @@ async def update_node(
     
     node.content = node_update.content
     node.updated_at = func.now()
+    await db.commit()
+    await db.refresh(node)
+    return node
+
+@router.patch("/{node_id}/position", response_model=NodeResponse)
+async def update_node_position(
+    node_id: UUID, 
+    position_update: NodePositionUpdate, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    node = await verify_node_owner(node_id, current_user.id, db)
+    
+    node.position_x = position_update.position_x
+    node.position_y = position_update.position_y
     await db.commit()
     await db.refresh(node)
     return node

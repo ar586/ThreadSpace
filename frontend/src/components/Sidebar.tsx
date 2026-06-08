@@ -50,7 +50,7 @@ export function Sidebar() {
 
   return (
     <div className="w-64 bg-muted/30 border-r border-border h-screen flex flex-col">
-      <div className="p-4 border-b border-border flex justify-between items-center">
+      <div className="h-16 px-4 border-b border-border flex justify-between items-center shrink-0">
         <h2 className="font-bold text-xl flex items-center gap-2 text-foreground">
           <Hash className="w-5 h-5 text-primary" /> ThreadSpace
         </h2>

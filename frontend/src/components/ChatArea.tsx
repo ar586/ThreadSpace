@@ -106,7 +106,7 @@ export function ChatArea({
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4 bg-[#efeae2] dark:bg-[#0b141a]">
-      <div className="max-w-4xl mx-auto flex flex-col gap-2">
+      <div className="w-full flex flex-col gap-2">
         {nodes.map((node) => (
           <div key={node.id} id={`message-${node.id}`} className="flex w-full justify-start relative group scroll-mt-24">
             

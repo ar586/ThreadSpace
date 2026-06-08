@@ -43,7 +43,7 @@ export function MessageInput({
 
   return (
     <div className="p-4 bg-background border-t border-border sticky bottom-0">
-      <form onSubmit={handleSubmit} className="flex gap-3 max-w-4xl mx-auto">
+      <form onSubmit={handleSubmit} className="flex gap-3 w-full">
         <Textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}

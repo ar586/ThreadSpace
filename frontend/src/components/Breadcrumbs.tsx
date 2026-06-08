@@ -30,7 +30,7 @@ export function Breadcrumbs({
   );
 
   return (
-    <div className="flex items-center justify-between p-4 bg-background border-b border-border sticky top-0 z-10 text-sm">
+    <div className="h-16 px-4 flex items-center justify-between bg-background border-b border-border sticky top-0 z-10 text-sm shrink-0">
       <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap flex-1">
         <Link
           href={`/w/${workspaceId}`}

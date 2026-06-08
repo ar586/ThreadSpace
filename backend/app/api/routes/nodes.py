@@ -9,7 +9,7 @@ from app.database import get_db
 from app.models.node import Node
 from app.models.workspace import Workspace
 from app.models.user import User
-from app.schemas import NodeCreate, NodeResponse, BreadcrumbNode, NodeUpdate, NodePositionUpdate
+from app.schemas import NodeCreate, NodeResponse, BreadcrumbNode, NodeUpdate, NodePositionUpdate, NodeParentUpdate
 from app.api.dependencies import get_current_user
 
 router = APIRouter()
@@ -166,8 +166,8 @@ async def delete_node(
     await db.commit()
     return {"status": "success"}
 
-@router.put("/{node_id}", response_model=NodeResponse)
-async def update_node(
+@router.patch("/{node_id}/content", response_model=NodeResponse)
+async def update_node_content(
     node_id: UUID, 
     node_update: NodeUpdate, 
     db: AsyncSession = Depends(get_db),
@@ -176,6 +176,25 @@ async def update_node(
     node = await verify_node_owner(node_id, current_user.id, db)
     
     node.content = node_update.content
+    node.updated_at = func.now()
+    await db.commit()
+    await db.refresh(node)
+    return node
+
+@router.patch("/{node_id}/parent", response_model=NodeResponse)
+async def update_node_parent(
+    node_id: UUID, 
+    parent_update: NodeParentUpdate, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    node = await verify_node_owner(node_id, current_user.id, db)
+    
+    # Optional: prevent setting parent to itself or creating cycles (basic check)
+    if parent_update.parent_id == node_id:
+        raise HTTPException(status_code=400, detail="Node cannot be its own parent")
+
+    node.parent_id = parent_update.parent_id
     node.updated_at = func.now()
     await db.commit()
     await db.refresh(node)

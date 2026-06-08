@@ -16,6 +16,8 @@ import {
   Edge as FlowEdge,
   MarkerType,
   ReactFlowInstance,
+  Connection,
+  addEdge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { CustomThreadNode } from "./CustomThreadNode";
@@ -217,6 +219,69 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
     }
   }, [rawNodes, nodes, mutate, workspaceId]);
 
+  const onConnect = useCallback(async (params: Connection) => {
+    setEdges((eds) => addEdge(params, eds));
+    const parentId = params.source === "workspace-head" ? null : params.source;
+    try {
+      await fetcher(`/nodes/${params.target}/parent`, {
+        method: "PATCH",
+        body: JSON.stringify({ parent_id: parentId }),
+      });
+      mutate(`/nodes/workspace/${workspaceId}/all`);
+    } catch (err) {
+      console.error(err);
+      mutate(`/nodes/workspace/${workspaceId}/all`);
+    }
+  }, [setEdges, workspaceId, mutate]);
+
+  const onEdgesDelete = useCallback(async (deletedEdges: FlowEdge[]) => {
+    const updates = deletedEdges.map(edge => {
+      if (edge.source === "workspace-head") return Promise.resolve(); // already root
+      return fetcher(`/nodes/${edge.target}/parent`, {
+        method: "PATCH",
+        body: JSON.stringify({ parent_id: null }),
+      });
+    });
+    
+    try {
+      await Promise.all(updates);
+      mutate(`/nodes/workspace/${workspaceId}/all`);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [workspaceId, mutate]);
+
+  const onNodesDelete = useCallback(async (deletedNodes: FlowNode[]) => {
+    const nodeIdsToDelete = new Set<string>();
+    deletedNodes.forEach(n => {
+      if (n.id !== "workspace-head") {
+        nodeIdsToDelete.add(n.id);
+      }
+    });
+
+    if (nodeIdsToDelete.size === 0) return;
+
+    const gatherDescendants = (parentId: string, toDelete: Set<string>) => {
+      edges.forEach(edge => {
+        if (edge.source === parentId && !toDelete.has(edge.target)) {
+          toDelete.add(edge.target);
+          gatherDescendants(edge.target, toDelete);
+        }
+      });
+    };
+
+    nodeIdsToDelete.forEach(id => gatherDescendants(id, nodeIdsToDelete));
+
+    setEdges(eds => eds.filter(e => !nodeIdsToDelete.has(e.source) && !nodeIdsToDelete.has(e.target)));
+    setNodes(nds => nds.filter(n => !nodeIdsToDelete.has(n.id)));
+
+    deletedNodes.forEach(node => {
+      if (node.id !== "workspace-head") {
+        fetcher(`/nodes/${node.id}`, { method: "DELETE" }).catch(err => console.error(err));
+      }
+    });
+  }, [edges, setNodes, setEdges]);
+
   if (error) {
     return <div className="flex-1 flex items-center justify-center text-red-500">Failed to load Workbench.</div>;
   }
@@ -238,6 +303,9 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeDragStop={onNodeDragStop}
+        onConnect={onConnect}
+        onEdgesDelete={onEdgesDelete}
+        onNodesDelete={onNodesDelete}
         onInit={(instance) => { reactFlowInstance.current = instance; }}
         colorMode={resolvedTheme === "dark" ? "dark" : "light"}
         fitView

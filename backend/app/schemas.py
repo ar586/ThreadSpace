@@ -38,6 +38,9 @@ class NodePositionUpdate(BaseModel):
     position_x: float
     position_y: float
 
+class NodeParentUpdate(BaseModel):
+    parent_id: Optional[UUID] = None
+
 class NodeResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID

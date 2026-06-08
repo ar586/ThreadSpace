@@ -71,8 +71,8 @@ export function ChatArea({
     if (!editContent.trim()) return;
     setIsSaving(true);
     try {
-      await fetcher(`/nodes/${id}`, {
-        method: "PUT",
+      await fetcher(`/nodes/${id}/content`, {
+        method: "PATCH",
         body: JSON.stringify({ content: editContent.trim() }),
       });
       await mutate();

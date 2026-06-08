@@ -76,6 +76,58 @@ async def get_all_workspace_nodes(
     result = await db.execute(select(Node).where(Node.workspace_id == workspace_id).order_by(Node.created_at.asc()))
     return result.scalars().all()
 
+from app.schemas import NodeSearchResult
+
+@router.get("/workspace/{workspace_id}/search", response_model=List[NodeSearchResult])
+async def search_nodes(
+    workspace_id: UUID,
+    q: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    await verify_workspace_owner(workspace_id, current_user.id, db)
+    if not q or len(q.strip()) == 0:
+        return []
+    
+    # Fetch all nodes in the workspace efficiently
+    result = await db.execute(select(Node).where(Node.workspace_id == workspace_id))
+    all_nodes = result.scalars().all()
+    
+    # Create lookup dictionaries
+    node_dict = {str(n.id): n for n in all_nodes}
+    
+    query_lower = q.lower()
+    results = []
+    
+    for node in all_nodes:
+        if query_lower in node.content.lower():
+            # Build breadcrumb
+            path_parts = []
+            current = node
+            while current:
+                path_parts.append(current.content)
+                if current.parent_id and str(current.parent_id) in node_dict:
+                    current = node_dict[str(current.parent_id)]
+                else:
+                    break
+            
+            # path_parts is from child to root, reverse it to root -> child
+            path_parts.reverse()
+            # If it's just the node itself, the breadcrumb might just be its parent path + its content
+            breadcrumb_str = " > ".join(path_parts)
+            
+            results.append(
+                NodeSearchResult(
+                    id=node.id,
+                    content=node.content,
+                    parent_id=node.parent_id,
+                    breadcrumb=breadcrumb_str
+                )
+            )
+            
+    # Sort results by content length or just return
+    return results[:50]  # limit to 50 results
+
 @router.get("/{node_id}/breadcrumbs", response_model=List[BreadcrumbNode])
 async def get_breadcrumbs(
     node_id: UUID, 

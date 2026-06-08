@@ -3,7 +3,7 @@
 import useSWR from "swr";
 import { fetcher } from "@/lib/api";
 import Link from "next/link";
-import { ChevronRight, Home, Loader2, Network, MessageSquare } from "lucide-react";
+import { ChevronRight, Home, Loader2, Network, MessageSquare, Search } from "lucide-react";
 import { Button } from "./ui/button";
 
 export interface BreadcrumbNode {
@@ -64,25 +64,37 @@ export function Breadcrumbs({
         })}
       </div>
 
-      {/* View Switcher */}
-      <div className="flex items-center bg-muted/50 rounded-lg p-1 ml-4 shrink-0">
-        <Button 
-          variant={viewMode === "chat" ? "default" : "ghost"} 
-          size="sm" 
-          onClick={() => setViewMode("chat")}
-          className={`h-8 px-3 rounded-md transition-all ${viewMode === "chat" ? "shadow-sm" : "hover:bg-background/50 text-muted-foreground"}`}
+      {/* View Switcher & Search */}
+      <div className="flex items-center gap-2 ml-4 shrink-0">
+        
+        <div className="flex items-center bg-muted/50 rounded-lg p-1">
+          <Button 
+            variant={viewMode === "chat" ? "default" : "ghost"} 
+            size="sm" 
+            onClick={() => setViewMode("chat")}
+            className={`h-8 px-3 rounded-md transition-all ${viewMode === "chat" ? "shadow-sm" : "hover:bg-background/50 text-muted-foreground"}`}
+          >
+            <MessageSquare className="w-4 h-4 mr-2 hidden sm:block" />
+            Chat
+          </Button>
+          <Button 
+            variant={viewMode === "workbench" ? "default" : "ghost"} 
+            size="sm" 
+            onClick={() => setViewMode("workbench")}
+            className={`h-8 px-3 rounded-md transition-all ${viewMode === "workbench" ? "shadow-sm" : "hover:bg-background/50 text-muted-foreground"}`}
+          >
+            <Network className="w-4 h-4 mr-2 hidden sm:block" />
+            Workbench
+          </Button>
+        </div>
+
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => window.dispatchEvent(new CustomEvent('open-command'))}
+          className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground ml-1"
         >
-          <MessageSquare className="w-4 h-4 mr-2" />
-          Chat View
-        </Button>
-        <Button 
-          variant={viewMode === "workbench" ? "default" : "ghost"} 
-          size="sm" 
-          onClick={() => setViewMode("workbench")}
-          className={`h-8 px-3 rounded-md transition-all ${viewMode === "workbench" ? "shadow-sm" : "hover:bg-background/50 text-muted-foreground"}`}
-        >
-          <Network className="w-4 h-4 mr-2" />
-          Workbench
+          <Search className="w-4 h-4" />
         </Button>
       </div>
     </div>

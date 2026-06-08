@@ -8,6 +8,7 @@ import { Textarea } from "./ui/textarea";
 import { MessageSquareShare, Loader2, MoreHorizontal, Pencil, Trash2, Check, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,10 +37,14 @@ export function ChatArea({
   const url = nodeId ? `/nodes/${nodeId}/children` : `/nodes/workspace/${workspaceId}/root`;
   const { data: nodes, error, mutate } = useSWR<Node[]>(url, fetcher);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const searchParams = useSearchParams();
+  const highlightId = searchParams.get("highlight");
 
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+
+
 
   useEffect(() => {
     if (shouldMutate > 0) {
@@ -48,11 +53,19 @@ export function ChatArea({
   }, [shouldMutate, mutate]);
 
   useEffect(() => {
-    // Scroll to bottom on new messages
-    if (!editingNodeId) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (nodes && nodes.length > 0) {
+      if (highlightId) {
+        // Scroll to highlighted node
+        const element = document.getElementById(`message-${highlightId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      } else if (!editingNodeId) {
+        // Scroll to bottom on new messages
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      }
     }
-  }, [nodes, editingNodeId]);
+  }, [nodes, editingNodeId, highlightId]);
 
   const handleEditSave = async (id: string) => {
     if (!editContent.trim()) return;
@@ -95,7 +108,7 @@ export function ChatArea({
     <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4 bg-[#efeae2] dark:bg-[#0b141a]">
       <div className="max-w-4xl mx-auto flex flex-col gap-2">
         {nodes.map((node) => (
-          <div key={node.id} className="flex w-full justify-start relative group">
+          <div key={node.id} id={`message-${node.id}`} className="flex w-full justify-start relative group scroll-mt-24">
             
             {/* Action Menu (Visible on Hover) */}
             <div className="absolute -top-3 -right-2 md:right-auto md:left-[calc(100%+0.5rem)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
@@ -140,7 +153,7 @@ export function ChatArea({
             </div>
 
             {/* Chat Bubble */}
-            <div className="relative max-w-[90%] md:max-w-[75%] bg-white dark:bg-[#202c33] rounded-2xl rounded-tl-sm shadow-sm p-2 pl-3">
+            <div className={`relative max-w-[90%] md:max-w-[75%] bg-white dark:bg-[#202c33] rounded-2xl rounded-tl-sm shadow-sm p-2 pl-3 transition-all duration-700 ${highlightId === node.id ? 'ring-2 ring-primary bg-primary/10 dark:bg-primary/20 scale-[1.02]' : ''}`}>
               
               {/* Sender Name */}
               <div className="text-[13px] font-medium text-[#027eb5] dark:text-[#53bdeb] mb-1">

@@ -4,8 +4,8 @@ import useSWR from "swr";
 import { fetcher } from "@/lib/api";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { useState } from "react";
-import { FolderPlus, Hash, Loader2, Trash2, LogOut, User as UserIcon } from "lucide-react";
+import { useState, useRef } from "react";
+import { FolderPlus, Hash, Loader2, Trash2, LogOut, User as UserIcon, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ThemeToggle } from "./ThemeToggle";
@@ -20,6 +20,9 @@ export interface Workspace {
 export function Sidebar() {
   const { data: workspaces, error, mutate } = useSWR<Workspace[]>("/workspaces", fetcher);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [isCreating, setIsCreating] = useState(false);
   const params = useParams();
   const router = useRouter();
@@ -55,13 +58,38 @@ export function Sidebar() {
       </div>
       
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Workspaces</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Workspaces</h3>
+          <button
+            onClick={() => {
+              setSearchOpen(!searchOpen);
+              setSearchQuery("");
+              setTimeout(() => searchInputRef.current?.focus(), 50);
+            }}
+            className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          >
+            {searchOpen ? <X className="w-3.5 h-3.5" /> : <Search className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+        {searchOpen && (
+          <div className="relative mb-2">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Filter workspaces..."
+              className="w-full h-8 pl-8 pr-3 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
+            />
+          </div>
+        )}
         {!workspaces && !error && (
           <div className="flex justify-center p-4">
             <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
           </div>
         )}
-        {workspaces?.map((ws) => (
+        {workspaces?.filter(ws => !searchQuery || ws.name.toLowerCase().includes(searchQuery.toLowerCase())).map((ws) => (
           <div key={ws.id} className={`group flex items-center justify-between rounded-md transition-colors ${
               params.workspaceId === ws.id
                 ? "bg-primary/10 text-primary font-medium"

@@ -55,3 +55,9 @@ class BreadcrumbNode(BaseModel):
     content: str
     parent_id: Optional[UUID]
     level: int
+
+class NodeSearchResult(BaseModel):
+    id: UUID
+    content: str
+    parent_id: Optional[UUID]
+    breadcrumb: str

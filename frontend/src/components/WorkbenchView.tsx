@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/api";
 import { Node as APINode } from "./ChatArea";
@@ -15,11 +15,12 @@ import {
   Node as FlowNode,
   Edge as FlowEdge,
   MarkerType,
+  ReactFlowInstance,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { CustomThreadNode } from "./CustomThreadNode";
 import { WorkspaceHeadNode } from "./WorkspaceHeadNode";
-import { Loader2, Wand2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import dagre from "dagre";
 
@@ -52,6 +53,26 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
   
   const [nodes, setNodes, onNodesChange] = useNodesState<FlowNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdge>([]);
+  
+  const reactFlowInstance = useRef<ReactFlowInstance | null>(null);
+
+  // Listen for warp events
+  useEffect(() => {
+    const handleWarp = (e: CustomEvent) => {
+      const { nodeId } = e.detail;
+      if (!reactFlowInstance.current) return;
+      
+      const node = reactFlowInstance.current.getNode(nodeId);
+      if (node) {
+        // We add center offsets to frame the node nicely
+        // A typical node is width 300, height 160.
+        reactFlowInstance.current.setCenter(node.position.x + 150, node.position.y + 80, { zoom: 1.2, duration: 800 });
+      }
+    };
+    
+    window.addEventListener("warp-to-node" as any, handleWarp);
+    return () => window.removeEventListener("warp-to-node" as any, handleWarp);
+  }, []);
 
   // Synchronize backend data into React Flow state
   useEffect(() => {
@@ -217,13 +238,13 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeDragStop={onNodeDragStop}
+        onInit={(instance) => { reactFlowInstance.current = instance; }}
         colorMode={resolvedTheme === "dark" ? "dark" : "light"}
         fitView
         attributionPosition="bottom-right"
       >
         <Panel position="top-right" className="m-4">
           <Button onClick={handleAutoArrange} variant="secondary" className="shadow-md bg-background border border-border">
-            <Wand2 className="w-4 h-4 mr-2" />
             Auto Arrange
           </Button>
         </Panel>

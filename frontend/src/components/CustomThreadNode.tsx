@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { fetcher } from "@/lib/api";
 import { useSWRConfig } from "swr";
+import { LinkPreview } from "./LinkPreview";
 
 export function CustomThreadNode({ data }: { data: any }) {
   const params = useParams();
@@ -111,6 +112,9 @@ export function CustomThreadNode({ data }: { data: any }) {
           onDoubleClick={() => setIsEditing(true)}
         >
           {data.content}
+          {data.preview_data && (
+            <LinkPreview data={data.preview_data} />
+          )}
         </div>
       )}
 

@@ -45,6 +45,7 @@ class NodeResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID
     content: str
+    preview_data: Optional[dict] = None
     parent_id: Optional[UUID]
     workspace_id: UUID
     position_x: float
@@ -62,5 +63,6 @@ class BreadcrumbNode(BaseModel):
 class NodeSearchResult(BaseModel):
     id: UUID
     content: str
+    preview_data: Optional[dict] = None
     parent_id: Optional[UUID]
     breadcrumb: str

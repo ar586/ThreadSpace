@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+import httpx
+from bs4 import BeautifulSoup
+import re
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy import text
@@ -28,9 +31,53 @@ async def verify_node_owner(node_id: UUID, user_id: UUID, db: AsyncSession) -> N
         raise HTTPException(status_code=404, detail="Node not found or not authorized")
     return node
 
+URL_REGEX = re.compile(r'(https?://[^\s]+)')
+
+async def fetch_preview_data(node_id: UUID, content: str):
+    match = URL_REGEX.search(content)
+    if not match:
+        return
+    url = match.group(0)
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            response = await client.get(url, follow_redirects=True)
+            response.raise_for_status()
+            
+        soup = BeautifulSoup(response.text, "html.parser")
+        
+        title = soup.find("meta", property="og:title")
+        description = soup.find("meta", property="og:description")
+        image = soup.find("meta", property="og:image")
+        
+        preview_data = {}
+        if title and title.get("content"):
+            preview_data["title"] = title.get("content")
+        elif soup.title:
+            preview_data["title"] = soup.title.string
+            
+        if description and description.get("content"):
+            preview_data["description"] = description.get("content")
+            
+        if image and image.get("content"):
+            preview_data["image"] = image.get("content")
+            
+        preview_data["url"] = url
+        
+        if preview_data:
+            from app.database import async_session
+            from app.models.node import Node
+            async with async_session() as session:
+                async with session.begin():
+                    node = await session.get(Node, node_id)
+                    if node:
+                        node.preview_data = preview_data
+    except Exception as e:
+        print(f"Failed to fetch preview for {url}: {e}")
+
 @router.post("/", response_model=NodeResponse)
 async def create_node(
     node: NodeCreate, 
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -44,6 +91,9 @@ async def create_node(
     db.add(new_node)
     await db.commit()
     await db.refresh(new_node)
+    
+    background_tasks.add_task(fetch_preview_data, new_node.id, new_node.content)
+    
     return new_node
 
 @router.get("/{node_id}/children", response_model=List[NodeResponse])

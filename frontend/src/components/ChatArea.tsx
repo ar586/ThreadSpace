@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { LinkPreview, PreviewData } from "./LinkPreview";
 
 export interface Node {
   id: string;
@@ -23,6 +24,7 @@ export interface Node {
   workspace_id: string;
   created_at: string;
   updated_at?: string;
+  preview_data?: PreviewData;
 }
 
 export function ChatArea({ 
@@ -180,6 +182,9 @@ export function ChatArea({
               ) : (
                 <div className="text-[15px] text-[#111b21] dark:text-[#e9edef] leading-relaxed whitespace-pre-wrap pr-16 pb-3">
                   {node.content}
+                  {node.preview_data && (
+                    <LinkPreview data={node.preview_data} />
+                  )}
                 </div>
               )}
 

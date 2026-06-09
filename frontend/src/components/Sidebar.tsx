@@ -8,6 +8,7 @@ import { useState, useRef } from "react";
 import { FolderPlus, Hash, Loader2, Trash2, LogOut, User as UserIcon, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { InstallPWA } from "./InstallPWA";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -54,7 +55,10 @@ export function Sidebar() {
         <h2 className="font-bold text-xl flex items-center gap-2 text-foreground">
           <Hash className="w-5 h-5 text-primary" /> ThreadSpace
         </h2>
-        <ThemeToggle />
+        <div className="flex items-center gap-1">
+          <InstallPWA />
+          <ThemeToggle />
+        </div>
       </div>
       
       <div className="flex-1 overflow-y-auto p-4 space-y-2">

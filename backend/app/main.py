@@ -13,6 +13,9 @@ async def lifespan(app: FastAPI):
     # Initialize Database tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Add preview_data column to nodes if it doesn't exist
+        from sqlalchemy import text
+        await conn.execute(text("ALTER TABLE nodes ADD COLUMN IF NOT EXISTS preview_data JSONB"))
     yield
     # Cleanup on shutdown
     await engine.dispose()

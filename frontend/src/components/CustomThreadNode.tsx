@@ -7,6 +7,7 @@ import { useState } from "react";
 import { fetcher } from "@/lib/api";
 import { useSWRConfig } from "swr";
 import { LinkPreview } from "./LinkPreview";
+import { AudioPlayer } from "./AudioPlayer";
 
 export function CustomThreadNode({ data }: { data: any }) {
   const params = useParams();
@@ -15,7 +16,7 @@ export function CustomThreadNode({ data }: { data: any }) {
   const { deleteElements } = useReactFlow();
 
   const [isEditing, setIsEditing] = useState(false);
-  const [content, setContent] = useState(data.content);
+  const [content, setContent] = useState(data.content || "");
   const [isSaving, setIsSaving] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -93,7 +94,11 @@ export function CustomThreadNode({ data }: { data: any }) {
         </button>
       </div>
       
-      {isEditing ? (
+      {data.audio_url ? (
+        <div className="mb-4">
+          <AudioPlayer src={data.audio_url} />
+        </div>
+      ) : isEditing ? (
         <div className="mb-4">
           <textarea
             className="w-full text-sm text-foreground dark:text-[#e9edef] bg-transparent border border-primary/50 rounded p-1 outline-none resize-none overflow-hidden"

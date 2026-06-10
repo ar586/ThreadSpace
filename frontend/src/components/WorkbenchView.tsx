@@ -154,7 +154,7 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
         id: n.id,
         type: "threadNode",
         position: { x, y },
-        data: { id: n.id, content: n.content },
+        data: { id: n.id, content: n.content, audio_url: n.audio_url, preview_data: n.preview_data },
       };
     })];
 
@@ -237,6 +237,7 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
   const onEdgesDelete = useCallback(async (deletedEdges: FlowEdge[]) => {
     const updates = deletedEdges.map(edge => {
       if (edge.source === "workspace-head") return Promise.resolve(); // already root
+      if (edge.target === "workspace-head") return Promise.resolve(); // not a real node
       return fetcher(`/nodes/${edge.target}/parent`, {
         method: "PATCH",
         body: JSON.stringify({ parent_id: null }),

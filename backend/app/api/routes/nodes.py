@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, File, UploadFile, Form
 import httpx
 from bs4 import BeautifulSoup
 import re
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy import text
-from typing import List
-from uuid import UUID
+from typing import List, Optional
+from uuid import UUID, uuid4
+import os
 
 from app.database import get_db
 from app.models.node import Node
@@ -92,8 +93,51 @@ async def create_node(
     await db.commit()
     await db.refresh(new_node)
     
-    background_tasks.add_task(fetch_preview_data, new_node.id, new_node.content)
+    if new_node.content:
+        background_tasks.add_task(fetch_preview_data, new_node.id, new_node.content)
     
+    return new_node
+
+@router.post("/audio", response_model=NodeResponse)
+async def upload_audio_node(
+    file: UploadFile = File(...),
+    workspace_id: UUID = Form(...),
+    parent_id: Optional[UUID] = Form(None),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    await verify_workspace_owner(workspace_id, current_user.id, db)
+
+    # Determine file extension from content type
+    ext_map = {
+        "audio/webm": ".webm",
+        "audio/ogg": ".ogg",
+        "audio/mpeg": ".mp3",
+        "audio/mp3": ".mp3",
+        "audio/mp4": ".m4a",
+    }
+    ext = ext_map.get(file.content_type, ".webm")
+    filename = f"{uuid4()}{ext}"
+
+    from app.main import AUDIO_DIR
+    filepath = os.path.join(AUDIO_DIR, filename)
+
+    # Write uploaded file chunk by chunk
+    with open(filepath, "wb") as f:
+        while chunk := await file.read(1024 * 64):  # 64KB chunks
+            f.write(chunk)
+
+    audio_url = f"/static/audio/{filename}"
+
+    new_node = Node(
+        content=None,
+        audio_url=audio_url,
+        parent_id=parent_id,
+        workspace_id=workspace_id,
+    )
+    db.add(new_node)
+    await db.commit()
+    await db.refresh(new_node)
     return new_node
 
 @router.get("/{node_id}/children", response_model=List[NodeResponse])
@@ -150,12 +194,13 @@ async def search_nodes(
     results = []
     
     for node in all_nodes:
-        if query_lower in node.content.lower():
+        node_content = node.content or ""
+        if query_lower in node_content.lower():
             # Build breadcrumb
             path_parts = []
             current = node
             while current:
-                path_parts.append(current.content)
+                path_parts.append(current.content or "🎙️ Voice Note")
                 if current.parent_id and str(current.parent_id) in node_dict:
                     current = node_dict[str(current.parent_id)]
                 else:
@@ -170,6 +215,7 @@ async def search_nodes(
                 NodeSearchResult(
                     id=node.id,
                     content=node.content,
+                    audio_url=node.audio_url,
                     parent_id=node.parent_id,
                     breadcrumb=breadcrumb_str
                 )

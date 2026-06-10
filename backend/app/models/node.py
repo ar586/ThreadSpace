@@ -8,8 +8,9 @@ class Node(Base):
     __tablename__ = "nodes"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    content = Column(Text, nullable=False)
+    content = Column(Text, nullable=True)
     preview_data = Column(JSONB, nullable=True)
+    audio_url = Column(String, nullable=True)
     updated_at = Column(DateTime(timezone=True), nullable=True)
     parent_id = Column(UUID(as_uuid=True), ForeignKey("nodes.id", ondelete="CASCADE"), nullable=True)
     workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)

@@ -27,7 +27,7 @@ class WorkspaceResponse(BaseModel):
     created_at: datetime
 
 class NodeCreate(BaseModel):
-    content: str
+    content: Optional[str] = None
     parent_id: Optional[UUID] = None
     workspace_id: UUID
 
@@ -44,8 +44,9 @@ class NodeParentUpdate(BaseModel):
 class NodeResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID
-    content: str
+    content: Optional[str] = None
     preview_data: Optional[dict] = None
+    audio_url: Optional[str] = None
     parent_id: Optional[UUID]
     workspace_id: UUID
     position_x: float
@@ -56,13 +57,14 @@ class NodeResponse(BaseModel):
 class BreadcrumbNode(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID
-    content: str
+    content: Optional[str] = None
     parent_id: Optional[UUID]
     level: int
 
 class NodeSearchResult(BaseModel):
     id: UUID
-    content: str
+    content: Optional[str] = None
     preview_data: Optional[dict] = None
+    audio_url: Optional[str] = None
     parent_id: Optional[UUID]
     breadcrumb: str

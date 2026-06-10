@@ -16,15 +16,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LinkPreview, PreviewData } from "./LinkPreview";
+import { AudioPlayer } from "./AudioPlayer";
 
 export interface Node {
   id: string;
-  content: string;
+  content: string | null;
   parent_id: string | null;
   workspace_id: string;
   created_at: string;
   updated_at?: string;
   preview_data?: PreviewData;
+  audio_url?: string | null;
 }
 
 export function ChatArea({ 
@@ -122,7 +124,7 @@ export function ChatArea({
                   <DropdownMenuItem 
                     onClick={() => {
                       setEditingNodeId(node.id);
-                      setEditContent(node.content);
+                      setEditContent(node.content || "");
                     }}
                     className="cursor-pointer"
                   >
@@ -178,6 +180,10 @@ export function ChatArea({
                       {isSaving ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Check className="w-3 h-3 mr-1" />} Save
                     </Button>
                   </div>
+                </div>
+              ) : node.audio_url ? (
+                <div className="pb-3 pr-4">
+                  <AudioPlayer src={node.audio_url} />
                 </div>
               ) : (
                 <div className="text-[15px] text-[#111b21] dark:text-[#e9edef] leading-relaxed whitespace-pre-wrap pr-16 pb-3">

@@ -4,7 +4,7 @@ import useSWR, { preload } from "swr";
 import { fetcher } from "@/lib/api";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { FolderPlus, Hash, Loader2, Trash2, LogOut, User as UserIcon, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -16,18 +16,11 @@ export interface Workspace {
   id: string;
   name: string;
   created_at: string;
+  updated_at: string;
 }
 
 export function Sidebar() {
-  const { data: workspaces, error, mutate } = useSWR<Workspace[]>("/workspaces", fetcher, {
-    onSuccess: (data) => {
-      // Preload the top 5 workspaces to eliminate loading times
-      data.slice(0, 5).forEach(ws => {
-        preload(`/nodes/workspace/${ws.id}/root`, fetcher);
-        preload(`/nodes/workspace/${ws.id}/all`, fetcher);
-      });
-    }
-  });
+  const { data: workspaces, error, mutate } = useSWR<Workspace[]>("/workspaces", fetcher);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,6 +29,14 @@ export function Sidebar() {
   const params = useParams();
   const router = useRouter();
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    if (workspaces) {
+      workspaces.slice(0, 5).forEach(ws => {
+        preload(`/nodes/workspace/${ws.id}/root`, fetcher);
+      });
+    }
+  }, [workspaces]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,7 +143,7 @@ export function Sidebar() {
                   <div className="flex justify-between items-center mb-1">
                     <span className="font-semibold text-[15px] truncate pr-2">{ws.name}</span>
                     <span className="text-[11px] text-muted-foreground whitespace-nowrap shrink-0">
-                      {new Date(ws.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                      {new Date(ws.updated_at || ws.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                     </span>
                   </div>
                   <span className="text-[13px] text-muted-foreground truncate w-full">

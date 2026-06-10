@@ -1,6 +1,6 @@
 "use client";
 
-import useSWR from "swr";
+import useSWR, { preload } from "swr";
 import { fetcher } from "@/lib/api";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -19,7 +19,15 @@ export interface Workspace {
 }
 
 export function Sidebar() {
-  const { data: workspaces, error, mutate } = useSWR<Workspace[]>("/workspaces", fetcher);
+  const { data: workspaces, error, mutate } = useSWR<Workspace[]>("/workspaces", fetcher, {
+    onSuccess: (data) => {
+      // Preload the top 5 workspaces to eliminate loading times
+      data.slice(0, 5).forEach(ws => {
+        preload(`/nodes/workspace/${ws.id}/root`, fetcher);
+        preload(`/nodes/workspace/${ws.id}/all`, fetcher);
+      });
+    }
+  });
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");

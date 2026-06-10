@@ -32,7 +32,8 @@ app = FastAPI(title="ThreadSpace API", lifespan=lifespan)
 
 origins = [
     "http://localhost:3000",
-    "https://threadspace.vercel.app"
+    "https://threadspace.vercel.app",
+    "https://thread-space-red.vercel.app"
 ]
 
 app.add_middleware(

@@ -97,7 +97,7 @@ export function AudioPlayer({ src }: { src: string }) {
   }, []);
 
   return (
-    <div className="flex items-center gap-3 w-full min-w-[220px] max-w-[320px] px-3 py-2.5 rounded-xl bg-[#d9fdd3]/80 dark:bg-[#005c4b]/60 backdrop-blur-sm select-none">
+    <div className="flex items-center gap-3 w-full min-w-[150px] max-w-[320px] px-3 py-2.5 rounded-xl bg-[#d9fdd3]/80 dark:bg-[#005c4b]/60 backdrop-blur-sm select-none">
       <audio
         ref={audioRef}
         src={fullSrc}

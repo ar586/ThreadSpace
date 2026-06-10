@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Command,
   CommandDialog,
@@ -52,8 +53,10 @@ export function CommandMenu() {
     };
   }, []);
 
-  // Fetch workspaces for global navigation
-  const { data: workspaces } = useSWR<any[]>("/workspaces", fetcher);
+  const { user } = useAuth();
+
+  // Fetch workspaces for global navigation only if logged in
+  const { data: workspaces } = useSWR<any[]>(user ? "/workspaces" : null, fetcher);
 
   // Fetch results based on query if we are in a workspace
   const { data: results, error } = useSWR<NodeSearchResult[]>(

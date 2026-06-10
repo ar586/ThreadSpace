@@ -70,7 +70,7 @@ export function Sidebar() {
   };
 
   return (
-    <div className="w-64 bg-muted/30 border-r border-border h-screen flex flex-col">
+    <div className="w-full bg-muted/30 border-r border-border h-screen flex flex-col">
       <div className="h-16 px-4 border-b border-border flex justify-between items-center shrink-0">
         <h2 className="font-bold text-xl flex items-center gap-2 text-foreground">
           <Hash className="w-5 h-5 text-primary" /> ThreadSpace
@@ -113,38 +113,59 @@ export function Sidebar() {
             <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
           </div>
         )}
-        {workspaces?.filter(ws => !searchQuery || ws.name.toLowerCase().includes(searchQuery.toLowerCase())).map((ws) => (
-          <div key={ws.id} className={`group flex items-center justify-between rounded-md transition-colors ${
-              params.workspaceId === ws.id
-                ? "bg-primary/10 text-primary font-medium"
-                : "text-foreground hover:bg-accent hover:text-accent-foreground"
-            }`}>
-            <Link
-              href={`/w/${ws.id}`}
-              className="flex-1 px-3 py-2 text-sm truncate"
-            >
-              {ws.name}
-            </Link>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8 mr-1 opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 hover:bg-red-50 transition-opacity"
-              onClick={async (e) => {
-                e.preventDefault();
-                if (!confirm("Are you sure you want to delete this workspace and all its threads?")) return;
-                try {
-                  await fetcher(`/workspaces/${ws.id}`, { method: 'DELETE' });
-                  mutate();
-                  if (params.workspaceId === ws.id) router.push('/');
-                } catch(err) {
-                  console.error(err);
-                }
-              }}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-        ))}
+        <div className="space-y-1">
+          {workspaces?.filter(ws => !searchQuery || ws.name.toLowerCase().includes(searchQuery.toLowerCase())).map((ws) => (
+            <div key={ws.id} className={`group relative flex items-center justify-between rounded-xl transition-all duration-200 cursor-pointer overflow-hidden ${
+                params.workspaceId === ws.id
+                  ? "bg-primary/10 text-primary"
+                  : "text-foreground hover:bg-accent hover:text-accent-foreground"
+              }`}>
+              <Link
+                href={`/w/${ws.id}`}
+                className="flex-1 flex items-center gap-3 p-3"
+              >
+                {/* Avatar / Icon */}
+                <div className={`w-12 h-12 rounded-full flex shrink-0 items-center justify-center ${params.workspaceId === ws.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground group-hover:bg-background"}`}>
+                  <FolderPlus className="w-5 h-5" />
+                </div>
+                
+                {/* Chat Details */}
+                <div className="flex-1 flex flex-col min-w-0">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-semibold text-[15px] truncate pr-2">{ws.name}</span>
+                    <span className="text-[11px] text-muted-foreground whitespace-nowrap shrink-0">
+                      {new Date(ws.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                    </span>
+                  </div>
+                  <span className="text-[13px] text-muted-foreground truncate w-full">
+                    Tap to open workspace...
+                  </span>
+                </div>
+              </Link>
+              
+              {/* Delete Button (Hover on desktop, swipe/hold on mobile ideally but we keep it simple for now) */}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute right-2 h-8 w-8 opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 hover:bg-red-50 transition-opacity md:flex hidden"
+                onClick={async (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!confirm("Are you sure you want to delete this workspace and all its threads?")) return;
+                  try {
+                    await fetcher(`/workspaces/${ws.id}`, { method: 'DELETE' });
+                    mutate();
+                    if (params.workspaceId === ws.id) router.push('/');
+                  } catch(err) {
+                    console.error(err);
+                  }
+                }}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="p-4 border-t border-border bg-background space-y-4">

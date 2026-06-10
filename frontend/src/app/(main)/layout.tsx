@@ -3,6 +3,7 @@
 import { Sidebar } from "@/components/Sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function MainLayout({
   children,
@@ -10,6 +11,7 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const { user, isLoading } = useAuth();
+  const pathname = usePathname();
 
   if (isLoading) {
     return (
@@ -23,10 +25,14 @@ export default function MainLayout({
     return null; // Will redirect in AuthContext
   }
 
+  const isRoot = pathname === "/";
+
   return (
     <>
-      <Sidebar />
-      <main className="flex-1 flex flex-col h-screen relative">
+      <div className={`${isRoot ? "flex" : "hidden"} md:flex w-full md:w-80 shrink-0 h-screen`}>
+        <Sidebar />
+      </div>
+      <main className={`${isRoot ? "hidden" : "flex"} md:flex flex-1 flex-col h-screen relative w-full`}>
         {children}
       </main>
     </>

@@ -156,6 +156,25 @@ export function MessageInput({
         return;
       }
 
+      // Optimistic UI for Audio
+      const blobUrl = URL.createObjectURL(blob);
+      const optimisticNode = {
+        id: `temp-${Date.now()}`,
+        content: null,
+        audio_url: blobUrl,
+        workspace_id: workspaceId,
+        parent_id: parentId || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      const cacheKey = parentId ? `/nodes/${parentId}/children` : `/nodes/workspace/${workspaceId}/root`;
+      
+      mutate(cacheKey, (currentNodes: any) => {
+        if (!currentNodes) return [optimisticNode];
+        return [...currentNodes, optimisticNode];
+      }, { revalidate: false });
+
       setIsSending(true);
       try {
         const formData = new FormData();
@@ -171,10 +190,19 @@ export function MessageInput({
         });
 
         if (!res.ok) throw new Error(`Upload failed: ${res.statusText}`);
+        
+        const created = await res.json();
+        
+        // Replace optimistic audio with real node
+        mutate(cacheKey, (currentNodes: any) => {
+          if (!currentNodes) return [created];
+          return currentNodes.map((n: any) => n.id === optimisticNode.id ? created : n);
+        }, { revalidate: false });
 
         onMessageSent();
       } catch (err) {
         console.error("Failed to upload voice note:", err);
+        mutate(cacheKey); // Revert on error
       } finally {
         setIsSending(false);
       }

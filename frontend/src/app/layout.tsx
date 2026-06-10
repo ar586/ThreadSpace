@@ -10,7 +10,10 @@ import Script from "next/script";
 const inter = Inter({ subsets: ["latin"] });
 
 export const viewport: Viewport = {
-  themeColor: "#027eb5",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#efeae2" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b141a" },
+  ],
 };
 
 export const metadata: Metadata = {

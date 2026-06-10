@@ -28,7 +28,7 @@ export default function LoginPage() {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
-      await checkAuth();
+      checkAuth(); // Fire and forget, auth context will update while routing
       router.push("/");
     } catch (err: any) {
       setError("Invalid email or password.");

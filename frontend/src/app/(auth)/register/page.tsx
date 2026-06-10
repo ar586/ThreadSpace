@@ -34,7 +34,7 @@ export default function RegisterPage() {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
-      await checkAuth();
+      checkAuth(); // Fire and forget
       router.push("/");
     } catch (err: any) {
       setError("Registration failed. Email might already be in use.");

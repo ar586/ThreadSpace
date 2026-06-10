@@ -98,8 +98,23 @@ async def create_node(
     
     return new_node
 
+async def upload_to_azure_bg(data: bytes, blob_name: str):
+    conn_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+    if not conn_string:
+        return
+    try:
+        from azure.storage.blob.aio import BlobServiceClient
+        blob_service_client = BlobServiceClient.from_connection_string(conn_string)
+        async with blob_service_client:
+            container_client = blob_service_client.get_container_client("threads-audio")
+            blob_client = container_client.get_blob_client(blob_name)
+            await blob_client.upload_blob(data, overwrite=True)
+    except Exception as e:
+        print(f"Failed to upload to Azure in background: {e}")
+
 @router.post("/audio", response_model=NodeResponse)
 async def upload_audio_node(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     workspace_id: UUID = Form(...),
     parent_id: Optional[UUID] = Form(None),
@@ -122,24 +137,19 @@ async def upload_audio_node(
     conn_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
     
     if conn_string:
-        try:
-            from azure.storage.blob.aio import BlobServiceClient
-            blob_service_client = BlobServiceClient.from_connection_string(conn_string)
-            async with blob_service_client:
-                container_client = blob_service_client.get_container_client("threads-audio")
-                blob_client = container_client.get_blob_client(blob_name)
-                
-                # Upload directly from memory/spooled file
-                # In FastAPI, UploadFile.read() is async
-                data = await file.read()
-                await blob_client.upload_blob(data, overwrite=True)
-                
-                audio_url = blob_client.url
-        except Exception as e:
-            print(f"Failed to upload to Azure: {e}")
-            raise HTTPException(status_code=500, detail="Failed to upload audio to cloud storage")
+        from azure.storage.blob.aio import BlobServiceClient
+        # We need the URL synchronously to return to the client immediately
+        # Blob URL format: https://<account_name>.blob.core.windows.net/<container>/<blob_name>
+        blob_service_client = BlobServiceClient.from_connection_string(conn_string)
+        audio_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/threads-audio/{blob_name}"
+        
+        # Read the file data immediately before the request closes
+        data = await file.read()
+        
+        # Dispatch the actual upload to a background task
+        background_tasks.add_task(upload_to_azure_bg, data, blob_name)
     else:
-        # Fallback to local storage if Azure isn't configured yet (e.g. local dev)
+        # Fallback to local storage
         from app.main import AUDIO_DIR
         filepath = os.path.join(AUDIO_DIR, filename)
         with open(filepath, "wb") as f:
@@ -333,3 +343,38 @@ async def update_node_position(
     await db.commit()
     await db.refresh(node)
     return node
+
+from pydantic import BaseModel
+
+class BulkPositionUpdate(BaseModel):
+    node_id: UUID
+    position_x: float
+    position_y: float
+
+class BulkPositionsRequest(BaseModel):
+    updates: List[BulkPositionUpdate]
+
+@router.patch("/workspace/{workspace_id}/positions")
+async def update_bulk_positions(
+    workspace_id: UUID,
+    request: BulkPositionsRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    await verify_workspace_owner(workspace_id, current_user.id, db)
+    
+    if not request.updates:
+        return {"status": "success"}
+
+    update_dict = {str(u.node_id): (u.position_x, u.position_y) for u in request.updates}
+    node_ids = [u.node_id for u in request.updates]
+    
+    result = await db.execute(select(Node).where(Node.id.in_(node_ids), Node.workspace_id == workspace_id))
+    nodes_to_update = result.scalars().all()
+    
+    for node in nodes_to_update:
+        if str(node.id) in update_dict:
+            node.position_x, node.position_y = update_dict[str(node.id)]
+            
+    await db.commit()
+    return {"status": "success", "updated": len(nodes_to_update)}

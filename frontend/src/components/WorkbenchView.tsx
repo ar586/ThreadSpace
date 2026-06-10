@@ -206,31 +206,55 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
         const dPos = dagreGraph.node(n.id);
         const x = dPos.x - 150;
         const y = dPos.y - 80;
-        return fetcher(`/nodes/${n.id}/position`, {
-          method: "PATCH",
-          body: JSON.stringify({ position_x: x, position_y: y }),
-        });
+        return { node_id: n.id, position_x: x, position_y: y };
       });
 
-      await Promise.all(updates);
-      mutate(`/nodes/workspace/${workspaceId}/all`);
+      // Optimistically update rawNodes in cache
+      mutate(`/nodes/workspace/${workspaceId}/all`, (current: any) => {
+        if (!current) return current;
+        return current.map((n: any) => {
+          const update = updates.find(u => u.node_id === n.id);
+          if (update) {
+            return { ...n, position_x: update.position_x, position_y: update.position_y };
+          }
+          return n;
+        });
+      }, { revalidate: false });
+
+      await fetcher(`/nodes/workspace/${workspaceId}/positions`, {
+        method: "PATCH",
+        body: JSON.stringify({ updates }),
+      });
+      
     } catch (err) {
       console.error("Failed to auto arrange", err);
+      mutate(`/nodes/workspace/${workspaceId}/all`); // Revert on error
     }
   }, [rawNodes, nodes, mutate, workspaceId]);
 
   const onConnect = useCallback(async (params: Connection) => {
     setEdges((eds) => addEdge(params, eds));
     const parentId = params.source === "workspace-head" ? null : params.source;
+    
+    // Optimistic update of parent_id
+    mutate(`/nodes/workspace/${workspaceId}/all`, (current: any) => {
+      if (!current) return current;
+      return current.map((n: any) => {
+        if (n.id === params.target) {
+          return { ...n, parent_id: parentId };
+        }
+        return n;
+      });
+    }, { revalidate: false });
+
     try {
       await fetcher(`/nodes/${params.target}/parent`, {
         method: "PATCH",
         body: JSON.stringify({ parent_id: parentId }),
       });
-      mutate(`/nodes/workspace/${workspaceId}/all`);
     } catch (err) {
       console.error(err);
-      mutate(`/nodes/workspace/${workspaceId}/all`);
+      mutate(`/nodes/workspace/${workspaceId}/all`); // Revert on error
     }
   }, [setEdges, workspaceId, mutate]);
 

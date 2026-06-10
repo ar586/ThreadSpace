@@ -33,17 +33,37 @@ export function Sidebar() {
     e.preventDefault();
     if (!newWorkspaceName.trim()) return;
 
+    const workspaceName = newWorkspaceName.trim();
+    setNewWorkspaceName("");
     setIsCreating(true);
+
+    const tempId = `temp-${Date.now()}`;
+    const optimisticWorkspace = {
+      id: tempId,
+      name: workspaceName,
+      created_at: new Date().toISOString()
+    };
+
+    mutate((currentWorkspaces: any) => {
+      if (!currentWorkspaces) return [optimisticWorkspace];
+      return [optimisticWorkspace, ...currentWorkspaces];
+    }, { revalidate: false });
+
     try {
       const created = await fetcher<Workspace>("/workspaces", {
         method: "POST",
-        body: JSON.stringify({ name: newWorkspaceName }),
+        body: JSON.stringify({ name: workspaceName }),
       });
-      await mutate();
-      setNewWorkspaceName("");
+      
+      mutate((currentWorkspaces: any) => {
+        if (!currentWorkspaces) return [created];
+        return currentWorkspaces.map((ws: any) => ws.id === tempId ? created : ws);
+      }, { revalidate: false });
+      
       router.push(`/w/${created.id}`);
     } catch (err) {
       console.error(err);
+      mutate(); // Revert on error
     } finally {
       setIsCreating(false);
     }

@@ -201,46 +201,51 @@ async def search_nodes(
     if not q or len(q.strip()) == 0:
         return []
     
-    # Fetch all nodes in the workspace efficiently
-    result = await db.execute(select(Node).where(Node.workspace_id == workspace_id))
-    all_nodes = result.scalars().all()
-    
-    # Create lookup dictionaries
-    node_dict = {str(n.id): n for n in all_nodes}
-    
-    query_lower = q.lower()
-    results = []
-    
-    for node in all_nodes:
-        node_content = node.content or ""
-        if query_lower in node_content.lower():
-            # Build breadcrumb
-            path_parts = []
-            current = node
-            while current:
-                path_parts.append(current.content or "🎙️ Voice Note")
-                if current.parent_id and str(current.parent_id) in node_dict:
-                    current = node_dict[str(current.parent_id)]
-                else:
-                    break
+    query = text("""
+        WITH RECURSIVE breadcrumbs AS (
+            -- Base case: find matching nodes
+            SELECT 
+                id, 
+                content, 
+                parent_id, 
+                audio_url,
+                id as original_id,
+                0 as level
+            FROM nodes
+            WHERE workspace_id = :workspace_id 
+              AND content ILIKE :query
             
-            # path_parts is from child to root, reverse it to root -> child
-            path_parts.reverse()
-            # If it's just the node itself, the breadcrumb might just be its parent path + its content
-            breadcrumb_str = " > ".join(path_parts)
+            UNION ALL
             
-            results.append(
-                NodeSearchResult(
-                    id=node.id,
-                    content=node.content,
-                    audio_url=node.audio_url,
-                    parent_id=node.parent_id,
-                    breadcrumb=breadcrumb_str
-                )
-            )
-            
-    # Sort results by content length or just return
-    return results[:50]  # limit to 50 results
+            -- Recursive case: traverse up to the root
+            SELECT 
+                n.id, 
+                n.content, 
+                n.parent_id, 
+                b.audio_url,
+                b.original_id,
+                b.level + 1
+            FROM nodes n
+            INNER JOIN breadcrumbs b ON b.parent_id = n.id
+        )
+        SELECT 
+            b1.original_id as id,
+            (SELECT content FROM nodes WHERE id = b1.original_id) as content,
+            (SELECT audio_url FROM nodes WHERE id = b1.original_id) as audio_url,
+            (SELECT parent_id FROM nodes WHERE id = b1.original_id) as parent_id,
+            string_agg(COALESCE(b1.content, '🎙️ Voice Note'), ' > ' ORDER BY b1.level DESC) as breadcrumb
+        FROM breadcrumbs b1
+        GROUP BY b1.original_id
+        LIMIT 50;
+    """)
+    
+    result = await db.execute(query, {
+        "workspace_id": workspace_id,
+        "query": f"%{q}%"
+    })
+    
+    rows = result.mappings().all()
+    return rows
 
 @router.get("/{node_id}/breadcrumbs", response_model=List[BreadcrumbNode])
 async def get_breadcrumbs(

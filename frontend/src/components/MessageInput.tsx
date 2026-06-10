@@ -2,6 +2,7 @@
 
 import { fetcher, API_BASE_URL } from "@/lib/api";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useSWRConfig } from "swr";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { SendHorizontal, Mic, X, Square } from "lucide-react";
@@ -17,6 +18,7 @@ export function MessageInput({
 }) {
   const [content, setContent] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const { mutate } = useSWRConfig();
 
   // Voice recording state
   const [isRecording, setIsRecording] = useState(false);
@@ -40,20 +42,48 @@ export function MessageInput({
     e.preventDefault();
     if (!content.trim()) return;
 
+    const messageContent = content.trim();
+    setContent("");
+
+    // Optimistic UI Update
+    const optimisticNode = {
+      id: `temp-${Date.now()}`,
+      content: messageContent,
+      workspace_id: workspaceId,
+      parent_id: parentId || null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const cacheKey = parentId ? `/nodes/${parentId}/children` : `/nodes/workspace/${workspaceId}/root`;
+    
+    mutate(cacheKey, (currentNodes: any) => {
+      if (!currentNodes) return [optimisticNode];
+      return [...currentNodes, optimisticNode];
+    }, { revalidate: false });
+
     setIsSending(true);
     try {
-      await fetcher("/nodes", {
+      const created = await fetcher("/nodes", {
         method: "POST",
         body: JSON.stringify({
-          content: content.trim(),
+          content: messageContent,
           workspace_id: workspaceId,
           parent_id: parentId || null,
         }),
       });
-      setContent("");
+      
+      // Update cache with real node
+      mutate(cacheKey, (currentNodes: any) => {
+        if (!currentNodes) return [created];
+        return currentNodes.map((n: any) => n.id === optimisticNode.id ? created : n);
+      }, { revalidate: false });
+      
       onMessageSent();
     } catch (err) {
       console.error(err);
+      // Revert optimistic update on error
+      mutate(cacheKey);
     } finally {
       setIsSending(false);
     }

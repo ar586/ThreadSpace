@@ -8,6 +8,7 @@ from sqlalchemy import text
 from typing import List, Optional
 from uuid import UUID, uuid4
 import os
+from datetime import datetime, timezone
 
 from app.database import get_db
 from app.models.node import Node
@@ -92,10 +93,8 @@ async def create_node(
     db.add(new_node)
 
     # Touch workspace updated_at
-    result = await db.execute(select(Workspace).where(Workspace.id == node.workspace_id))
-    workspace = result.scalar_one_or_none()
-    if workspace:
-        workspace.updated_at = func.now()
+    from sqlalchemy import update
+    await db.execute(update(Workspace).where(Workspace.id == node.workspace_id).values(updated_at=datetime.now(timezone.utc)))
 
     await db.commit()
     await db.refresh(new_node)
@@ -173,10 +172,8 @@ async def upload_audio_node(
     db.add(new_node)
 
     # Touch workspace updated_at
-    result = await db.execute(select(Workspace).where(Workspace.id == workspace_id))
-    workspace = result.scalar_one_or_none()
-    if workspace:
-        workspace.updated_at = func.now()
+    from sqlalchemy import update
+    await db.execute(update(Workspace).where(Workspace.id == workspace_id).values(updated_at=datetime.now(timezone.utc)))
 
     await db.commit()
     await db.refresh(new_node)

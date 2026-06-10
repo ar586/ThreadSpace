@@ -16,7 +16,6 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "ThreadSpace",
   description: "A collaborative workspace for non-linear thinking.",
-  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -34,6 +33,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+      </head>
       <body className={`${inter.className} flex h-[100dvh] bg-background text-foreground overflow-hidden`}>
         <ThemeProvider
           attribute="class"

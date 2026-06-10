@@ -30,9 +30,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="ThreadSpace API", lifespan=lifespan)
 
+origins = [
+    "http://localhost:3000",
+    "https://threadspace.vercel.app"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, restrict to frontend URL
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

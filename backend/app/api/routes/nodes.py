@@ -108,7 +108,6 @@ async def upload_audio_node(
 ):
     await verify_workspace_owner(workspace_id, current_user.id, db)
 
-    # Determine file extension from content type
     ext_map = {
         "audio/webm": ".webm",
         "audio/ogg": ".ogg",
@@ -118,16 +117,35 @@ async def upload_audio_node(
     }
     ext = ext_map.get(file.content_type, ".webm")
     filename = f"{uuid4()}{ext}"
+    blob_name = f"workspaces/{workspace_id}/{filename}"
 
-    from app.main import AUDIO_DIR
-    filepath = os.path.join(AUDIO_DIR, filename)
-
-    # Write uploaded file chunk by chunk
-    with open(filepath, "wb") as f:
-        while chunk := await file.read(1024 * 64):  # 64KB chunks
-            f.write(chunk)
-
-    audio_url = f"/static/audio/{filename}"
+    conn_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+    
+    if conn_string:
+        try:
+            from azure.storage.blob.aio import BlobServiceClient
+            blob_service_client = BlobServiceClient.from_connection_string(conn_string)
+            async with blob_service_client:
+                container_client = blob_service_client.get_container_client("threads-audio")
+                blob_client = container_client.get_blob_client(blob_name)
+                
+                # Upload directly from memory/spooled file
+                # In FastAPI, UploadFile.read() is async
+                data = await file.read()
+                await blob_client.upload_blob(data, overwrite=True)
+                
+                audio_url = blob_client.url
+        except Exception as e:
+            print(f"Failed to upload to Azure: {e}")
+            raise HTTPException(status_code=500, detail="Failed to upload audio to cloud storage")
+    else:
+        # Fallback to local storage if Azure isn't configured yet (e.g. local dev)
+        from app.main import AUDIO_DIR
+        filepath = os.path.join(AUDIO_DIR, filename)
+        with open(filepath, "wb") as f:
+            while chunk := await file.read(1024 * 64):
+                f.write(chunk)
+        audio_url = f"/static/audio/{filename}"
 
     new_node = Node(
         content=None,

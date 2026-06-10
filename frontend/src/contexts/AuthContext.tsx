@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { fetcher, ApiError } from "@/lib/api";
 import { useRouter, usePathname } from "next/navigation";
+import { mutate } from "swr";
 
 export interface User {
   id: string;
@@ -51,6 +52,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await fetcher("/auth/logout", { method: "POST" });
       setUser(null);
+      // Clear all SWR cache to prevent data leaks between accounts
+      await mutate(
+        () => true,
+        undefined,
+        { revalidate: false }
+      );
       router.push("/login");
     } catch (err) {
       console.error(err);

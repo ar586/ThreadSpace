@@ -35,7 +35,7 @@ export function Sidebar() {
 
     setIsCreating(true);
     try {
-      const created = await fetcher<Workspace>("/workspaces/", {
+      const created = await fetcher<Workspace>("/workspaces", {
         method: "POST",
         body: JSON.stringify({ name: newWorkspaceName }),
       });

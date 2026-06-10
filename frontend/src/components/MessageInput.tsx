@@ -42,7 +42,7 @@ export function MessageInput({
 
     setIsSending(true);
     try {
-      await fetcher("/nodes/", {
+      await fetcher("/nodes", {
         method: "POST",
         body: JSON.stringify({
           content: content.trim(),

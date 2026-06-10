@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
     # Cleanup on shutdown
     await engine.dispose()
 
-app = FastAPI(title="ThreadSpace API", lifespan=lifespan)
+app = FastAPI(title="ThreadSpace API", lifespan=lifespan, redirect_slashes=False)
 
 origins = [
     "http://localhost:3000",

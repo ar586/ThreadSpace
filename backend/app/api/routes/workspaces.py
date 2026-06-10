@@ -11,7 +11,7 @@ from app.api.dependencies import get_current_user
 
 router = APIRouter()
 
-@router.post("/", response_model=WorkspaceResponse)
+@router.post("", response_model=WorkspaceResponse)
 async def create_workspace(
     workspace: WorkspaceCreate, 
     db: AsyncSession = Depends(get_db),
@@ -23,7 +23,7 @@ async def create_workspace(
     await db.refresh(new_workspace)
     return new_workspace
 
-@router.get("/", response_model=List[WorkspaceResponse])
+@router.get("", response_model=List[WorkspaceResponse])
 async def get_workspaces(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)

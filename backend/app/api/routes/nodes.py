@@ -75,7 +75,7 @@ async def fetch_preview_data(node_id: UUID, content: str):
     except Exception as e:
         print(f"Failed to fetch preview for {url}: {e}")
 
-@router.post("/", response_model=NodeResponse)
+@router.post("", response_model=NodeResponse)
 async def create_node(
     node: NodeCreate, 
     background_tasks: BackgroundTasks,

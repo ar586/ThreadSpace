@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CommandMenu } from "@/components/CommandMenu";
 import { SWRProvider } from "@/components/SWRProvider";
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -14,7 +15,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "ThreadSpace",
-  description: "Infinitely nested conversational note-taking",
+  description: "A collaborative workspace for non-linear thinking.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -33,7 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} flex h-screen bg-background text-foreground overflow-hidden`}>
+      <body className={`${inter.className} flex h-[100dvh] bg-background text-foreground overflow-hidden`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -47,6 +48,19 @@ export default function RootLayout({
             </SWRProvider>
           </AuthProvider>
         </ThemeProvider>
+        <Script id="register-sw" strategy="afterInteractive">
+          {`
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                  console.log('ServiceWorker registration successful');
+                }, function(err) {
+                  console.log('ServiceWorker registration failed: ', err);
+                });
+              });
+            }
+          `}
+        </Script>
       </body>
     </html>
   );

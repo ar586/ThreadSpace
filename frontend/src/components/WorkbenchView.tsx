@@ -67,8 +67,8 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
       const node = reactFlowInstance.current.getNode(nodeId);
       if (node) {
         // We add center offsets to frame the node nicely
-        // A typical node is width 300, height 160.
-        reactFlowInstance.current.setCenter(node.position.x + 150, node.position.y + 80, { zoom: 1.2, duration: 800 });
+        // A typical node is width 208, height 120.
+        reactFlowInstance.current.setCenter(node.position.x + 104, node.position.y + 60, { zoom: 1.2, duration: 800 });
       }
     };
     
@@ -87,11 +87,11 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
 
     // Add Workspace Head Node to dagre
     const headNodeId = "workspace-head";
-    dagreGraph.setNode(headNodeId, { width: 320, height: 100 });
+    dagreGraph.setNode(headNodeId, { width: 224, height: 80 });
 
     // Add all nodes to dagre
     rawNodes.forEach(n => {
-      dagreGraph.setNode(n.id, { width: 300, height: 160 }); // Approx width/height of our custom node
+      dagreGraph.setNode(n.id, { width: 208, height: 120 }); // Approx width/height of our custom node
     });
 
     // Add all edges to dagre for layout calculation
@@ -134,7 +134,7 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
       id: headNodeId,
       type: "headNode",
       // We subtract half width/height because dagre returns the center point!
-      position: { x: headPos.x - 160, y: headPos.y - 50 },
+      position: { x: headPos.x - 112, y: headPos.y - 40 },
       draggable: false, // Fixed root
       data: { name: workspace.name },
     };
@@ -146,8 +146,8 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
 
       if (isUnpositioned) {
         const dPos = dagreGraph.node(n.id);
-        x = dPos.x - 150; // Center adjust for width: 300
-        y = dPos.y - 80;  // Center adjust for height: 160
+        x = dPos.x - 104; // Center adjust for width: 208
+        y = dPos.y - 60;  // Center adjust for height: 120
       }
 
       return {
@@ -192,8 +192,8 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
       dagreGraph.setGraph({ rankdir: 'TB', ranksep: 80, nodesep: 150 });
 
       const headNodeId = "workspace-head";
-      dagreGraph.setNode(headNodeId, { width: 320, height: 100 });
-      rawNodes.forEach(n => dagreGraph.setNode(n.id, { width: 300, height: 160 }));
+      dagreGraph.setNode(headNodeId, { width: 224, height: 80 });
+      rawNodes.forEach(n => dagreGraph.setNode(n.id, { width: 208, height: 120 }));
 
       rawNodes.forEach((n) => {
         if (n.parent_id) dagreGraph.setEdge(n.parent_id, n.id);
@@ -204,8 +204,8 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
 
       const updates = rawNodes.map(n => {
         const dPos = dagreGraph.node(n.id);
-        const x = dPos.x - 150;
-        const y = dPos.y - 80;
+        const x = dPos.x - 104;
+        const y = dPos.y - 60;
         return { node_id: n.id, position_x: x, position_y: y };
       });
 

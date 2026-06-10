@@ -29,10 +29,10 @@ export default function MainLayout({
 
   return (
     <>
-      <div className={`${isRoot ? "flex" : "hidden"} md:flex w-full md:w-80 shrink-0 h-screen`}>
+      <div className={`${isRoot ? "flex" : "hidden"} md:flex w-full md:w-80 shrink-0 h-[100dvh]`}>
         <Sidebar />
       </div>
-      <main className={`${isRoot ? "hidden" : "flex"} md:flex flex-1 flex-col h-screen relative w-full`}>
+      <main className={`${isRoot ? "hidden" : "flex"} md:flex flex-1 flex-col h-[100dvh] relative w-full`}>
         {children}
       </main>
     </>

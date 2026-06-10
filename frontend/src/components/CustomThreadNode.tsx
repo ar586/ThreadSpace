@@ -78,7 +78,7 @@ export function CustomThreadNode({ data }: { data: any }) {
   };
 
   return (
-    <div className="group bg-card dark:bg-[#202c33] border border-border shadow-sm rounded-xl p-4 w-64 relative">
+    <div className="group bg-card dark:bg-[#202c33] border border-border shadow-sm rounded-xl p-3 w-52 relative">
       <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-primary" />
       
       <div className="flex justify-between items-start mb-2">

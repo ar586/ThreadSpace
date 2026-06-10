@@ -42,8 +42,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    checkAuth();
-  }, [pathname]);
+    if (!user) {
+      checkAuth();
+    }
+  }, [pathname, user]);
 
   const logout = async () => {
     try {

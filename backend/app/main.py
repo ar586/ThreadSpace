@@ -24,6 +24,7 @@ async def lifespan(app: FastAPI):
         await conn.execute(text("ALTER TABLE nodes ADD COLUMN IF NOT EXISTS preview_data JSONB"))
         await conn.execute(text("ALTER TABLE nodes ADD COLUMN IF NOT EXISTS audio_url VARCHAR"))
         await conn.execute(text("ALTER TABLE nodes ALTER COLUMN content DROP NOT NULL"))
+        await conn.execute(text("ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"))
     yield
     # Cleanup on shutdown
     await engine.dispose()

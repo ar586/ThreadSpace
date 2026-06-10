@@ -25,6 +25,7 @@ class WorkspaceResponse(BaseModel):
     id: UUID
     name: str
     created_at: datetime
+    updated_at: datetime
 
 class NodeCreate(BaseModel):
     content: Optional[str] = None

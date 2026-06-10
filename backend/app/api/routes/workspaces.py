@@ -31,7 +31,7 @@ async def get_workspaces(
     result = await db.execute(
         select(Workspace)
         .where(Workspace.user_id == current_user.id)
-        .order_by(Workspace.created_at.desc())
+        .order_by(Workspace.updated_at.desc())
     )
     return result.scalars().all()
 

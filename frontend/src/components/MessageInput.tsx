@@ -237,7 +237,7 @@ export function MessageInput({
           </Button>
 
           {/* Recording indicator */}
-          <div className="flex-1 flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-red-500/5 dark:bg-red-500/10 border border-red-500/20">
+          <div className="flex-1 flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2.5 rounded-2xl bg-red-500/5 dark:bg-red-500/10 border border-red-500/20 min-w-0">
             {/* Pulsing red dot */}
             <div className="relative shrink-0">
               <div className="w-3 h-3 rounded-full bg-red-500" />
@@ -245,16 +245,16 @@ export function MessageInput({
             </div>
 
             {/* Timer */}
-            <span className="text-sm font-mono tabular-nums text-foreground font-medium tracking-wide">
+            <span className="text-sm font-mono tabular-nums text-foreground font-medium tracking-wide shrink-0">
               {formatTime(recordingTime)}
             </span>
 
             {/* Waveform visualization bars */}
-            <div className="flex-1 flex items-center justify-center gap-[3px] h-6 overflow-hidden">
+            <div className="flex-1 flex items-center justify-center gap-[2px] md:gap-[3px] h-6 overflow-hidden min-w-0 mask-image-linear-gradient">
               {Array.from({ length: 28 }).map((_, i) => (
                 <div
                   key={i}
-                  className="w-[3px] rounded-full bg-red-400/60 dark:bg-red-400/40"
+                  className={`w-[2px] md:w-[3px] rounded-full bg-red-400/60 dark:bg-red-400/40 shrink-0 ${i > 10 ? 'hidden sm:block' : ''}`}
                   style={{
                     height: `${Math.max(4, Math.random() * 20 + 4)}px`,
                     animation: `pulse ${0.5 + Math.random() * 0.8}s ease-in-out ${Math.random() * 0.5}s infinite alternate`,

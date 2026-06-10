@@ -90,6 +90,13 @@ async def create_node(
         workspace_id=node.workspace_id
     )
     db.add(new_node)
+
+    # Touch workspace updated_at
+    result = await db.execute(select(Workspace).where(Workspace.id == node.workspace_id))
+    workspace = result.scalar_one_or_none()
+    if workspace:
+        workspace.updated_at = func.now()
+
     await db.commit()
     await db.refresh(new_node)
     
@@ -164,6 +171,13 @@ async def upload_audio_node(
         workspace_id=workspace_id,
     )
     db.add(new_node)
+
+    # Touch workspace updated_at
+    result = await db.execute(select(Workspace).where(Workspace.id == workspace_id))
+    workspace = result.scalar_one_or_none()
+    if workspace:
+        workspace.updated_at = func.now()
+
     await db.commit()
     await db.refresh(new_node)
     return new_node

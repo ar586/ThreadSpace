@@ -79,6 +79,9 @@ export function MessageInput({
         return currentNodes.map((n: any) => n.id === optimisticNode.id ? created : n);
       }, { revalidate: false });
       
+      // Tell the sidebar to re-fetch workspaces so the sorting updates!
+      mutate("/workspaces");
+      
       onMessageSent();
     } catch (err) {
       console.error(err);
@@ -198,6 +201,9 @@ export function MessageInput({
           if (!currentNodes) return [created];
           return currentNodes.map((n: any) => n.id === optimisticNode.id ? created : n);
         }, { revalidate: false });
+
+        // Tell the sidebar to re-fetch workspaces so the sorting updates!
+        mutate("/workspaces");
 
         onMessageSent();
       } catch (err) {

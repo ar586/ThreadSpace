@@ -20,6 +20,9 @@ class UserResponse(BaseModel):
 class WorkspaceCreate(BaseModel):
     name: str
 
+class WorkspaceUpdate(BaseModel):
+    name: str
+
 class WorkspaceResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID

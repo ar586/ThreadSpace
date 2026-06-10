@@ -5,12 +5,13 @@ import { fetcher } from "@/lib/api";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { useState, useRef, useEffect } from "react";
-import { FolderPlus, Hash, Loader2, Trash2, LogOut, User as UserIcon, Search, X } from "lucide-react";
+import { FolderPlus, Hash, Loader2, Trash2, LogOut, User as UserIcon, Search, X, MoreHorizontal, Pencil } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { InstallPWA } from "./InstallPWA";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 
 export interface Workspace {
   id: string;
@@ -26,6 +27,9 @@ export function Sidebar() {
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [editingWorkspaceId, setEditingWorkspaceId] = useState<string | null>(null);
+  const [editingWorkspaceName, setEditingWorkspaceName] = useState("");
+  const [isRenaming, setIsRenaming] = useState(false);
   const params = useParams();
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -139,39 +143,98 @@ export function Sidebar() {
                 </div>
                 
                 {/* Chat Details */}
-                <div className="flex-1 flex flex-col min-w-0">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="font-semibold text-[15px] truncate pr-2">{ws.name}</span>
-                    <span className="text-[11px] text-muted-foreground whitespace-nowrap shrink-0">
-                      {new Date(ws.updated_at || ws.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                    </span>
-                  </div>
-                  <span className="text-[13px] text-muted-foreground truncate w-full">
-                    Tap to open workspace...
-                  </span>
+                <div className="flex-1 flex flex-col min-w-0 pr-8">
+                  {editingWorkspaceId === ws.id ? (
+                    <form 
+                      className="flex items-center gap-1 w-full"
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        if (!editingWorkspaceName.trim() || isRenaming) return;
+                        setIsRenaming(true);
+                        try {
+                          await fetcher(`/workspaces/${ws.id}`, {
+                            method: "PATCH",
+                            body: JSON.stringify({ name: editingWorkspaceName.trim() })
+                          });
+                          mutate();
+                          setEditingWorkspaceId(null);
+                        } catch (err) {
+                          console.error(err);
+                        } finally {
+                          setIsRenaming(false);
+                        }
+                      }}
+                    >
+                      <input 
+                        autoFocus
+                        className="w-full bg-background border border-border text-[14px] px-2 py-1 rounded focus:outline-none focus:border-primary" 
+                        value={editingWorkspaceName}
+                        onChange={(e) => setEditingWorkspaceName(e.target.value)}
+                        onBlur={() => {
+                          // Slight delay to allow form submission to trigger first if clicked enter
+                          setTimeout(() => {
+                            if (!isRenaming) setEditingWorkspaceId(null);
+                          }, 150);
+                        }}
+                        onClick={(e) => e.preventDefault()}
+                      />
+                    </form>
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="font-semibold text-[15px] truncate pr-2">{ws.name}</span>
+                        <span className="text-[11px] text-muted-foreground whitespace-nowrap shrink-0">
+                          {new Date(ws.updated_at || ws.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                        </span>
+                      </div>
+                      <span className="text-[13px] text-muted-foreground truncate w-full">
+                        Tap to open workspace...
+                      </span>
+                    </>
+                  )}
                 </div>
               </Link>
               
-              {/* Delete Button (Hover on desktop, swipe/hold on mobile ideally but we keep it simple for now) */}
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="absolute right-2 h-8 w-8 opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 hover:bg-red-50 transition-opacity md:flex hidden"
-                onClick={async (e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (!confirm("Are you sure you want to delete this workspace and all its threads?")) return;
-                  try {
-                    await fetcher(`/workspaces/${ws.id}`, { method: 'DELETE' });
-                    mutate();
-                    if (params.workspaceId === ws.id) router.push('/');
-                  } catch(err) {
-                    console.error(err);
-                  }
-                }}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              {/* Action Menu */}
+              <div className="absolute right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
+                <DropdownMenu>
+                  <DropdownMenuTrigger onClick={(e) => e.preventDefault()} className="h-8 w-8 bg-transparent hover:bg-background/80 border border-transparent hover:border-border shadow-none hover:shadow-sm rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-all focus-visible:outline-none">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenuItem 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setEditingWorkspaceId(ws.id);
+                        setEditingWorkspaceName(ws.name);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <Pencil className="w-4 h-4 mr-2" />
+                      Rename
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!confirm("Are you sure you want to delete this workspace and all its threads?")) return;
+                        try {
+                          await fetcher(`/workspaces/${ws.id}`, { method: 'DELETE' });
+                          mutate();
+                          if (params.workspaceId === ws.id) router.push('/');
+                        } catch(err) {
+                          console.error(err);
+                        }
+                      }}
+                      className="cursor-pointer text-red-600 focus:text-red-600"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           ))}
         </div>

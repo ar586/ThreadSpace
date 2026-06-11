@@ -81,6 +81,7 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
     if (!rawNodes || !workspace) return;
 
     const dagreGraph = new dagre.graphlib.Graph();
+    dagreGraph.setDefaultEdgeLabel(() => ({}));
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
     const ranksep = isMobile ? 50 : 80;
     const nodesep = isMobile ? 80 : 150;

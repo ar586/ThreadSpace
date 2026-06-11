@@ -62,6 +62,15 @@ export function MessageInput({
       return [...currentNodes, optimisticNode];
     }, { revalidate: false });
 
+    mutate("/workspaces", (current: any) => {
+      if (!current || !Array.isArray(current)) return current;
+      const ws = current.find((w: any) => w.id === workspaceId);
+      if (!ws) return current;
+      const updatedWs = { ...ws, updated_at: new Date().toISOString() };
+      const others = current.filter((w: any) => w.id !== workspaceId);
+      return [updatedWs, ...others].sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime());
+    }, { revalidate: false });
+
     setIsSending(true);
     try {
       const created = await fetcher("/nodes", {
@@ -176,6 +185,15 @@ export function MessageInput({
       mutate(cacheKey, (currentNodes: any) => {
         if (!currentNodes) return [optimisticNode];
         return [...currentNodes, optimisticNode];
+      }, { revalidate: false });
+
+      mutate("/workspaces", (current: any) => {
+        if (!current || !Array.isArray(current)) return current;
+        const ws = current.find((w: any) => w.id === workspaceId);
+        if (!ws) return current;
+        const updatedWs = { ...ws, updated_at: new Date().toISOString() };
+        const others = current.filter((w: any) => w.id !== workspaceId);
+        return [updatedWs, ...others].sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime());
       }, { revalidate: false });
 
       setIsSending(true);

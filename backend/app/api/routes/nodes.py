@@ -19,10 +19,12 @@ from app.api.dependencies import get_current_user
 
 router = APIRouter()
 
-async def verify_workspace_owner(workspace_id: UUID, user_id: UUID, db: AsyncSession):
+async def verify_workspace_owner(workspace_id: UUID, user_id: UUID, db: AsyncSession) -> Workspace:
     result = await db.execute(select(Workspace).where(Workspace.id == workspace_id, Workspace.user_id == user_id))
-    if not result.scalar_one_or_none():
+    workspace = result.scalar_one_or_none()
+    if not workspace:
         raise HTTPException(status_code=403, detail="Not authorized to access this workspace")
+    return workspace
 
 async def verify_node_owner(node_id: UUID, user_id: UUID, db: AsyncSession) -> Node:
     result = await db.execute(
@@ -83,7 +85,7 @@ async def create_node(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    await verify_workspace_owner(node.workspace_id, current_user.id, db)
+    workspace = await verify_workspace_owner(node.workspace_id, current_user.id, db)
     
     new_node = Node(
         content=node.content,
@@ -92,9 +94,8 @@ async def create_node(
     )
     db.add(new_node)
 
-    # Touch workspace updated_at
-    from sqlalchemy import update
-    await db.execute(update(Workspace).where(Workspace.id == node.workspace_id).values(updated_at=datetime.now(timezone.utc)))
+    # Touch workspace updated_at using ORM
+    workspace.updated_at = datetime.now(timezone.utc)
 
     await db.commit()
     await db.refresh(new_node)
@@ -127,7 +128,7 @@ async def upload_audio_node(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    await verify_workspace_owner(workspace_id, current_user.id, db)
+    workspace = await verify_workspace_owner(workspace_id, current_user.id, db)
 
     ext_map = {
         "audio/webm": ".webm",
@@ -171,9 +172,8 @@ async def upload_audio_node(
     )
     db.add(new_node)
 
-    # Touch workspace updated_at
-    from sqlalchemy import update
-    await db.execute(update(Workspace).where(Workspace.id == workspace_id).values(updated_at=datetime.now(timezone.utc)))
+    # Touch workspace updated_at using ORM
+    workspace.updated_at = datetime.now(timezone.utc)
 
     await db.commit()
     await db.refresh(new_node)

@@ -81,17 +81,22 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
     if (!rawNodes || !workspace) return;
 
     const dagreGraph = new dagre.graphlib.Graph();
-    dagreGraph.setDefaultEdgeLabel(() => ({}));
-    // rankdir = TB (Top to Bottom), ranksep = vertical gap, nodesep = horizontal gap
-    dagreGraph.setGraph({ rankdir: 'TB', ranksep: 80, nodesep: 150 });
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const ranksep = isMobile ? 50 : 80;
+    const nodesep = isMobile ? 80 : 150;
+    const nodeWidth = isMobile ? 160 : 208;
+    const nodeHeight = isMobile ? 100 : 120;
+    const headWidth = isMobile ? 176 : 224;
+
+    dagreGraph.setGraph({ rankdir: 'TB', ranksep, nodesep });
 
     // Add Workspace Head Node to dagre
     const headNodeId = "workspace-head";
-    dagreGraph.setNode(headNodeId, { width: 224, height: 80 });
+    dagreGraph.setNode(headNodeId, { width: headWidth, height: 80 });
 
     // Add all nodes to dagre
     rawNodes.forEach(n => {
-      dagreGraph.setNode(n.id, { width: 208, height: 120 }); // Approx width/height of our custom node
+      dagreGraph.setNode(n.id, { width: nodeWidth, height: nodeHeight }); 
     });
 
     // Add all edges to dagre for layout calculation
@@ -133,8 +138,7 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
     const headNode: FlowNode = {
       id: headNodeId,
       type: "headNode",
-      // We subtract half width/height because dagre returns the center point!
-      position: { x: headPos.x - 112, y: headPos.y - 40 },
+      position: { x: headPos.x - (headWidth / 2), y: headPos.y - 40 },
       draggable: false, // Fixed root
       data: { name: workspace.name },
     };
@@ -146,8 +150,8 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
 
       if (isUnpositioned) {
         const dPos = dagreGraph.node(n.id);
-        x = dPos.x - 104; // Center adjust for width: 208
-        y = dPos.y - 60;  // Center adjust for height: 120
+        x = dPos.x - (nodeWidth / 2); 
+        y = dPos.y - (nodeHeight / 2);  
       }
 
       return {
@@ -189,11 +193,16 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
     try {
       const dagreGraph = new dagre.graphlib.Graph();
       dagreGraph.setDefaultEdgeLabel(() => ({}));
-      dagreGraph.setGraph({ rankdir: 'TB', ranksep: 80, nodesep: 150 });
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+      const nodeWidth = isMobile ? 160 : 208;
+      const nodeHeight = isMobile ? 100 : 120;
+      const headWidth = isMobile ? 176 : 224;
+
+      dagreGraph.setGraph({ rankdir: 'TB', ranksep: isMobile ? 50 : 80, nodesep: isMobile ? 80 : 150 });
 
       const headNodeId = "workspace-head";
-      dagreGraph.setNode(headNodeId, { width: 224, height: 80 });
-      rawNodes.forEach(n => dagreGraph.setNode(n.id, { width: 208, height: 120 }));
+      dagreGraph.setNode(headNodeId, { width: headWidth, height: 80 });
+      rawNodes.forEach(n => dagreGraph.setNode(n.id, { width: nodeWidth, height: nodeHeight }));
 
       rawNodes.forEach((n) => {
         if (n.parent_id) dagreGraph.setEdge(n.parent_id, n.id);
@@ -204,8 +213,8 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
 
       const updates = rawNodes.map(n => {
         const dPos = dagreGraph.node(n.id);
-        const x = dPos.x - 104;
-        const y = dPos.y - 60;
+        const x = dPos.x - (nodeWidth / 2);
+        const y = dPos.y - (nodeHeight / 2);
         return { node_id: n.id, position_x: x, position_y: y };
       });
 
@@ -348,7 +357,7 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
           pannable 
           nodeColor={(n) => n.type === 'headNode' ? '#8696a0' : '#027eb5'}
           maskColor="rgba(0, 0, 0, 0.5)"
-          className="bg-card border border-border rounded-lg shadow-sm"
+          className="!w-24 !h-16 md:!w-48 md:!h-32 bg-card border border-border rounded-lg shadow-sm"
         />
       </ReactFlow>
     </div>

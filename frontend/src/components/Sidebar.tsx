@@ -153,7 +153,7 @@ export function Sidebar() {
                         setIsRenaming(true);
                         try {
                           await fetcher(`/workspaces/${ws.id}`, {
-                            method: "PATCH",
+                            method: "PUT",
                             body: JSON.stringify({ name: editingWorkspaceName.trim() })
                           });
                           mutate();

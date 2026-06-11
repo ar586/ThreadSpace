@@ -67,7 +67,7 @@ async def delete_workspace(
         return {"status": "success"}
     raise HTTPException(status_code=404, detail="Workspace not found")
 
-@router.patch("/{workspace_id}", response_model=WorkspaceResponse)
+@router.put("/{workspace_id}", response_model=WorkspaceResponse)
 async def update_workspace(
     workspace_id: str,
     workspace_update: WorkspaceUpdate,

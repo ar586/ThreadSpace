@@ -83,11 +83,11 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
     const dagreGraph = new dagre.graphlib.Graph();
     dagreGraph.setDefaultEdgeLabel(() => ({}));
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    const ranksep = isMobile ? 50 : 80;
-    const nodesep = isMobile ? 80 : 150;
-    const nodeWidth = isMobile ? 160 : 208;
-    const nodeHeight = isMobile ? 100 : 120;
-    const headWidth = isMobile ? 176 : 224;
+    const ranksep = isMobile ? 40 : 80;
+    const nodesep = isMobile ? 40 : 150;
+    const nodeWidth = isMobile ? 120 : 208;
+    const nodeHeight = isMobile ? 80 : 120;
+    const headWidth = isMobile ? 140 : 224;
 
     dagreGraph.setGraph({ rankdir: 'TB', ranksep, nodesep });
 
@@ -195,11 +195,11 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
       const dagreGraph = new dagre.graphlib.Graph();
       dagreGraph.setDefaultEdgeLabel(() => ({}));
       const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-      const nodeWidth = isMobile ? 160 : 208;
-      const nodeHeight = isMobile ? 100 : 120;
-      const headWidth = isMobile ? 176 : 224;
+      const nodeWidth = isMobile ? 120 : 208;
+      const nodeHeight = isMobile ? 80 : 120;
+      const headWidth = isMobile ? 140 : 224;
 
-      dagreGraph.setGraph({ rankdir: 'TB', ranksep: isMobile ? 50 : 80, nodesep: isMobile ? 80 : 150 });
+      dagreGraph.setGraph({ rankdir: 'TB', ranksep: isMobile ? 40 : 80, nodesep: isMobile ? 40 : 150 });
 
       const headNodeId = "workspace-head";
       dagreGraph.setNode(headNodeId, { width: headWidth, height: 80 });
@@ -352,7 +352,7 @@ export function WorkbenchView({ workspaceId }: { workspaceId: string }) {
           </Button>
         </Panel>
         <Background variant={"dots" as any} gap={24} size={1} />
-        <Controls />
+        <Controls className="!hidden md:!flex" />
         <MiniMap 
           zoomable 
           pannable 

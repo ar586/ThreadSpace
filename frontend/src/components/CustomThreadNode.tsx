@@ -78,7 +78,7 @@ export function CustomThreadNode({ data }: { data: any }) {
   };
 
   return (
-    <div className="group bg-card dark:bg-[#202c33] border border-border shadow-sm rounded-xl p-3 w-[160px] md:w-[208px] relative">
+    <div className="group bg-card dark:bg-[#202c33] border border-border shadow-sm rounded-xl p-3 w-[120px] md:w-[208px] relative">
       <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-primary" />
       
       <div className="flex justify-between items-start mb-2">
@@ -101,7 +101,7 @@ export function CustomThreadNode({ data }: { data: any }) {
       ) : isEditing ? (
         <div className="mb-4">
           <textarea
-            className="w-full text-sm text-foreground dark:text-[#e9edef] bg-transparent border border-primary/50 rounded p-1 outline-none resize-none overflow-hidden"
+            className="w-full text-xs md:text-sm text-foreground dark:text-[#e9edef] bg-transparent border border-primary/50 rounded p-1 outline-none resize-none overflow-hidden"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onBlur={handleSave}
@@ -113,7 +113,7 @@ export function CustomThreadNode({ data }: { data: any }) {
         </div>
       ) : (
         <div 
-          className="text-sm text-foreground dark:text-[#e9edef] line-clamp-4 leading-relaxed mb-4 whitespace-pre-wrap cursor-text"
+          className="text-xs md:text-sm text-foreground dark:text-[#e9edef] line-clamp-4 leading-relaxed mb-4 whitespace-pre-wrap cursor-text"
           onDoubleClick={() => setIsEditing(true)}
         >
           {data.content}

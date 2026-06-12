@@ -114,8 +114,8 @@ export function ChatArea({
         {nodes.map((node) => (
           <div key={node.id} id={`message-${node.id}`} className="flex w-full justify-start relative group scroll-mt-24">
             
-            {/* Action Menu (Visible on Hover) */}
-            <div className="absolute -top-3 -right-2 md:right-auto md:left-[calc(100%+0.5rem)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
+            {/* Action Menu (Always visible on mobile, hover on desktop) */}
+            <div className="absolute -top-3 -right-2 md:right-auto md:left-[calc(100%+0.5rem)] opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
               <DropdownMenu>
                 <DropdownMenuTrigger className="h-8 w-8 bg-background border border-border shadow-sm rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none">
                   <MoreHorizontal className="w-4 h-4" />

@@ -97,7 +97,7 @@ export function AudioPlayer({ src }: { src: string }) {
   }, []);
 
   return (
-    <div className="flex items-center gap-3 w-full min-w-[150px] max-w-[320px] px-3 py-2.5 rounded-xl bg-[#d9fdd3]/80 dark:bg-[#005c4b]/60 backdrop-blur-sm select-none">
+    <div className="flex items-center gap-1.5 md:gap-3 w-full min-w-0 max-w-[320px] px-2 md:px-3 py-2 md:py-2.5 rounded-xl bg-[#d9fdd3]/80 dark:bg-[#005c4b]/60 backdrop-blur-sm select-none">
       <audio
         ref={audioRef}
         src={fullSrc}
@@ -108,14 +108,14 @@ export function AudioPlayer({ src }: { src: string }) {
       />
 
       {/* Play / Pause */}
-      <button
+        <button
         onClick={togglePlay}
-        className="w-9 h-9 shrink-0 rounded-full bg-white/90 dark:bg-white/20 flex items-center justify-center text-[#027eb5] dark:text-[#53bdeb] hover:scale-105 active:scale-95 transition-transform shadow-sm"
+        className="w-7 h-7 md:w-9 md:h-9 shrink-0 rounded-full bg-white/90 dark:bg-white/20 flex items-center justify-center text-[#027eb5] dark:text-[#53bdeb] hover:scale-105 active:scale-95 transition-transform shadow-sm"
       >
         {isPlaying ? (
-          <Pause className="w-4 h-4 fill-current" />
+          <Pause className="w-3 h-3 md:w-4 md:h-4 fill-current" />
         ) : (
-          <Play className="w-4 h-4 fill-current ml-0.5" />
+          <Play className="w-3 h-3 md:w-4 md:h-4 fill-current ml-0.5" />
         )}
       </button>
 

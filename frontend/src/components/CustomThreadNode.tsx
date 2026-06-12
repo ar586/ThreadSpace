@@ -124,8 +124,8 @@ export function CustomThreadNode({ data }: { data: any }) {
       )}
 
       <Link href={`/w/${workspaceId}/n/${data.id}`} className="block w-full">
-        <Button variant="secondary" className="w-full h-8 text-xs bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
-          <MessageSquareShare className="w-3 h-3 mr-2" /> Dive into Thread
+        <Button variant="secondary" className="w-full h-7 md:h-8 px-2 md:px-4 text-[10px] md:text-xs bg-primary/10 text-primary hover:bg-primary/20 transition-colors truncate">
+          <MessageSquareShare className="w-3 h-3 mr-1.5 md:mr-2 shrink-0" /> <span className="truncate">Dive into Thread</span>
         </Button>
       </Link>
 
